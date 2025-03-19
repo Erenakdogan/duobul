@@ -1,0 +1,2 @@
+C:/Users/aydne/My project/duobul/duobul/android/app/.cxx/Debug/2g6b3a1o/x86/CMakeFiles/edit_cache.dir
+C:/Users/aydne/My project/duobul/duobul/android/app/.cxx/Debug/2g6b3a1o/x86/CMakeFiles/rebuild_cache.dir
