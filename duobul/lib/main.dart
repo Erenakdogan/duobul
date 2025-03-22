@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/register.dart';
+import 'screens/signup.dart';
 
 void main() {
   runApp(const MainApp());
@@ -16,7 +16,7 @@ class MainApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
-      home: const RegisterScreen(),
+      home: const SignUpScreen(),
     );
   }
 }
