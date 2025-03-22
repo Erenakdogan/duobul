@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'register.dart';
 import '../services/api_service.dart';
+import 'users_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -157,10 +158,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                               // Giriş başarılı
                               if (response['success'] == true) {
-                                // TODO: HomePage'e yönlendir
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Giriş başarılı!'),
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (context) => const UsersScreen(),
                                   ),
                                 );
                               }

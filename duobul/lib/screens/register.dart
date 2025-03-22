@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'loading_screen.dart';
+import '../services/api_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -84,7 +85,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       TextFormField(
                         controller: _usernameController,
                         decoration: InputDecoration(
-                          labelText: 'Kullanıcı Adı',
+                          labelText: 'İsim Soyisim',
                           labelStyle: TextStyle(color: Colors.lightBlue[700]),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(25),
@@ -218,14 +219,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           if (_formKey.currentState!.validate()) {
-                            // Loading ekranına geç
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (context) => const LoadingScreen(),
-                              ),
-                            );
+                            try {
+                              final apiService = ApiService();
+                              final response = await apiService.register(
+                                _usernameController.text,
+                                _emailController.text,
+                                _passwordController.text,
+                              );
+
+                              if (response['success'] == true) {
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (context) => const LoadingScreen(),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Hata: ${response['error']}'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Bağlantı hatası: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
                           }
                         },
                         style: ElevatedButton.styleFrom(

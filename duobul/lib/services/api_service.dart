@@ -2,15 +2,17 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl =
-      'http://your-backend-url/api'; // Backend URL'nizi buraya yazın
+  static const String baseUrl = 'http://192.168.0.6/api'; // kendi IP’n
 
   // Kullanıcı girişi
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/login'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('$baseUrl/login.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: json.encode({
           'email': email,
           'password': password,
@@ -18,22 +20,36 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        try {
+          final data = json.decode(response.body);
+          return data;
+        } catch (e) {
+          throw Exception('Sunucu yanıtı geçersiz format içeriyor');
+        }
       } else {
-        throw Exception('Giriş başarısız: ${response.body}');
+        throw Exception('Sunucu hatası: ${response.statusCode}');
       }
     } catch (e) {
       throw Exception('Bağlantı hatası: $e');
     }
   }
 
-  // Kullanıcı kaydı
+  // Kullanıcı kaydı (güncellenmiş debug'lu)
   Future<Map<String, dynamic>> register(
       String username, String email, String password) async {
     try {
+      // Giden veriyi logla
+      print('📤 GÖNDERİLEN VERİ:');
+      print('username: $username');
+      print('email: $email');
+      print('password: $password');
+
       final response = await http.post(
-        Uri.parse('$baseUrl/register'),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('$baseUrl/register.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: json.encode({
           'username': username,
           'email': email,
@@ -41,11 +57,12 @@ class ApiService {
         }),
       );
 
-      if (response.statusCode == 201) {
-        return json.decode(response.body);
-      } else {
-        throw Exception('Kayıt başarısız: ${response.body}');
-      }
+      // Sunucudan gelen yanıtı logla
+      print('📥 YANIT STATUS CODE: ${response.statusCode}');
+      print('📥 YANIT BODY: ${response.body}');
+
+      final data = json.decode(response.body);
+      return data;
     } catch (e) {
       throw Exception('Bağlantı hatası: $e');
     }
