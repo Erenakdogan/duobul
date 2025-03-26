@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'register.dart';
 import '../services/api_service.dart';
-import 'users_screen.dart';
+import 'loading_screen.dart';
+import 'homepage.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -156,18 +157,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 _passwordController.text,
                               );
 
-                              // Giriş başarılı
                               if (response['success'] == true) {
                                 Navigator.of(context).pushReplacement(
                                   MaterialPageRoute(
-                                    builder: (context) => const UsersScreen(),
+                                    builder: (context) => const LoadingScreen(
+                                      nextScreen: HomeScreen(),
+                                      delay: Duration(seconds: 3),
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Hata: ${response['error']}'),
+                                    backgroundColor: Colors.red,
                                   ),
                                 );
                               }
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Hata: $e'),
+                                  content: Text('Bağlantı hatası: $e'),
                                   backgroundColor: Colors.red,
                                 ),
                               );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'loading_screen.dart';
 import '../services/api_service.dart';
+import 'loading_screen.dart';
+import 'profile_setup.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -232,7 +233,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               if (response['success'] == true) {
                                 Navigator.of(context).pushReplacement(
                                   MaterialPageRoute(
-                                    builder: (context) => const LoadingScreen(),
+                                    builder: (context) => LoadingScreen(
+                                      nextScreen: ProfileSetupScreen(
+                                        email: _emailController.text,
+                                        username: _usernameController.text,
+                                      ),
+                                      delay: const Duration(seconds: 2),
+                                    ),
                                   ),
                                 );
                               } else {
