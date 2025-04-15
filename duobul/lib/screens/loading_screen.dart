@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
-import 'profile_setup.dart';
+import 'homepage.dart';
 
 class LoadingScreen extends StatefulWidget {
-  const LoadingScreen({super.key});
+  final Widget nextScreen;
+  final Duration delay;
+
+  const LoadingScreen({
+    super.key,
+    required this.nextScreen,
+    this.delay = const Duration(seconds: 3),
+  });
 
   @override
   State<LoadingScreen> createState() => _LoadingScreenState();
@@ -17,35 +23,37 @@ class _LoadingScreenState extends State<LoadingScreen>
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
-      duration: const Duration(seconds: 2),
+      duration: widget.delay,
       vsync: this,
     );
 
     _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: Curves.elasticOut,
+        curve: Curves.easeOutBack,
       ),
     );
 
     _controller.forward();
 
-    // 3 saniye sonra profil oluşturma ekranına git
-    Timer(const Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const ProfileSetupScreen(),
-        ),
-      );
-    });
+    _navigateToNext();
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  _navigateToNext() async {
+    await Future.delayed(widget.delay);
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => widget.nextScreen,
+      ),
+    );
   }
 
   @override
@@ -55,10 +63,24 @@ class _LoadingScreenState extends State<LoadingScreen>
       body: Center(
         child: ScaleTransition(
           scale: _animation,
-          child: Icon(
-            Icons.sports_esports,
-            size: 150,
-            color: Colors.lightBlue[400],
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.sports_esports,
+                size: 100,
+                color: Colors.lightBlue[400],
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'DuoBul',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.lightBlue[700],
+                ),
+              ),
+            ],
           ),
         ),
       ),

@@ -1,27 +1,30 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
+import 'loading_screen.dart';
+import 'homepage.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
-  const ProfileSetupScreen({super.key});
+  final String email;
+  final String username;
+
+  const ProfileSetupScreen({
+    super.key,
+    required this.email,
+    required this.username,
+  });
 
   @override
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
 }
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
-  final _usernameController = TextEditingController();
-  bool _isGameListExpanded = false;
+  final List<String> _selectedGames = [];
   final List<String> _games = [
     'League of Legends',
     'CS:GO',
     'Valorant',
     'Battlefield 1'
   ];
-
-  @override
-  void dispose() {
-    _usernameController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,28 +54,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  TextFormField(
-                    controller: _usernameController,
-                    decoration: InputDecoration(
-                      labelText: 'Kullanıcı Adı',
-                      labelStyle: TextStyle(color: Colors.lightBlue[700]),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(25),
-                        borderSide: BorderSide(
-                            color: Colors.lightBlue.withOpacity(0.5)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(25),
-                        borderSide:
-                            BorderSide(color: Colors.lightBlue[400]!, width: 2),
-                      ),
-                      prefixIcon:
-                          Icon(Icons.person, color: Colors.lightBlue[400]),
-                      filled: true,
-                      fillColor: Colors.white,
+                  Text(
+                    'Hoş geldin, ${widget.username}!',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.lightBlue[700],
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -90,12 +76,18 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                           BorderSide(color: Colors.lightBlue.withOpacity(0.5)),
                     ),
                     children: _games
-                        .map((game) => ListTile(
-                              leading: Icon(Icons.gamepad,
-                                  color: Colors.lightBlue[400]),
+                        .map((game) => CheckboxListTile(
                               title: Text(game),
-                              contentPadding:
-                                  const EdgeInsets.symmetric(horizontal: 24),
+                              value: _selectedGames.contains(game),
+                              onChanged: (bool? value) {
+                                setState(() {
+                                  if (value == true) {
+                                    _selectedGames.add(game);
+                                  } else {
+                                    _selectedGames.remove(game);
+                                  }
+                                });
+                              },
                             ))
                         .toList(),
                   ),
@@ -104,8 +96,39 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () {
-                // Profil kaydetme işlemleri burada yapılacak
+              onPressed: () async {
+                try {
+                  final apiService = ApiService();
+                  final response = await apiService.updateProfile(
+                    widget.email,
+                    _selectedGames.join(','),
+                  );
+
+                  if (response['success'] == true) {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (context) => LoadingScreen(
+                          nextScreen: const HomeScreen(),
+                          delay: const Duration(seconds: 2),
+                        ),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Hata: ${response['error']}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Bağlantı hatası: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),

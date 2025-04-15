@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'register.dart';
+import '../services/api_service.dart';
+import 'loading_screen.dart';
+import 'homepage.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -9,17 +13,13 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
 
   @override
   void dispose() {
-    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -28,7 +28,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Scaffold(
       backgroundColor: Colors.blue[50],
       appBar: AppBar(
-        title: const Text('Aramıza Hoşgeldin!'),
+        title: const Text('Giriş Yap'),
         centerTitle: true,
         backgroundColor: Colors.blue[100],
       ),
@@ -80,37 +80,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 20),
-                      TextFormField(
-                        controller: _usernameController,
-                        decoration: InputDecoration(
-                          labelText: 'Kullanıcı Adı',
-                          labelStyle: TextStyle(color: Colors.lightBlue[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide(
-                                color: Colors.lightBlue.withOpacity(0.5)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide(
-                                color: Colors.lightBlue[400]!, width: 2),
-                          ),
-                          prefixIcon:
-                              Icon(Icons.person, color: Colors.lightBlue[400]),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Lütfen kullanıcı adı giriniz';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _emailController,
                         decoration: InputDecoration(
@@ -174,52 +143,45 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           if (value == null || value.isEmpty) {
                             return 'Lütfen şifre giriniz';
                           }
-                          if (value.length < 6) {
-                            return 'Şifre en az 6 karakter olmalıdır';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _confirmPasswordController,
-                        decoration: InputDecoration(
-                          labelText: 'Şifreyi Tekrar Girin',
-                          labelStyle: TextStyle(color: Colors.lightBlue[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide(
-                                color: Colors.lightBlue.withOpacity(0.5)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide(
-                                color: Colors.lightBlue[400]!, width: 2),
-                          ),
-                          prefixIcon:
-                              Icon(Icons.lock, color: Colors.lightBlue[400]),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        obscureText: true,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Lütfen şifrenizi tekrar giriniz';
-                          }
-                          if (value != _passwordController.text) {
-                            return 'Şifreler eşleşmiyor';
-                          }
                           return null;
                         },
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           if (_formKey.currentState!.validate()) {
-                            // Kayıt işlemleri burada yapılacak
+                            try {
+                              final apiService = ApiService();
+                              final response = await apiService.login(
+                                _emailController.text,
+                                _passwordController.text,
+                              );
+
+                              if (response['success'] == true) {
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (context) => const LoadingScreen(
+                                      nextScreen: HomeScreen(),
+                                      delay: Duration(seconds: 3),
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Hata: ${response['error']}'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Bağlantı hatası: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
                           }
                         },
                         style: ElevatedButton.styleFrom(
@@ -230,7 +192,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           backgroundColor: Colors.lightBlue[400],
                           foregroundColor: Colors.white,
                         ),
-                        child: const Text('Kayıt Ol'),
+                        child: const Text('Giriş Yap'),
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                              builder: (context) => const RegisterScreen(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          'Hesabınız yok mu? Kayıt olun',
+                          style: TextStyle(
+                            color: Colors.lightBlue[700],
+                            fontSize: 14,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 20),
                     ],
