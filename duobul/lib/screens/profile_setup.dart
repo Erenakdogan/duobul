@@ -29,11 +29,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Profil Oluştur'),
         centerTitle: true,
-        backgroundColor: Colors.blue[100],
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -41,11 +41,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.lightBlue.withOpacity(0.1),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                     blurRadius: 10,
                     spreadRadius: 5,
                   ),
@@ -58,26 +58,33 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     'Hoş geldin, ${widget.username}!',
                     style: TextStyle(
                       fontSize: 20,
-                      color: Colors.lightBlue[700],
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   ),
                   const SizedBox(height: 20),
                   ExpansionTile(
                     title: Text(
                       'Favori Oyunlar',
-                      style: TextStyle(color: Colors.lightBlue[700]),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
                     ),
-                    leading: Icon(Icons.games, color: Colors.lightBlue[400]),
-                    backgroundColor: Colors.white,
-                    collapsedBackgroundColor: Colors.white,
+                    collapsedIconColor: Theme.of(context).colorScheme.tertiary,
+                    collapsedShape: RoundedRectangleBorder(
+                      borderRadius: BorderRadiusDirectional.only(
+                        topStart: Radius.circular(25),
+                        topEnd: Radius.circular(25),
+                      )),
+                    leading: Icon(Icons.games, color: Theme.of(context).colorScheme.tertiary),
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    collapsedBackgroundColor: Theme.of(context).colorScheme.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                       side:
-                          BorderSide(color: Colors.lightBlue.withOpacity(0.5)),
+                          BorderSide(color: Theme.of(context).colorScheme.tertiary, width: 2),
                     ),
                     children: _games
                         .map((game) => CheckboxListTile(
                               title: Text(game),
+                              checkColor: Theme.of(context).colorScheme.tertiary,
                               value: _selectedGames.contains(game),
                               onChanged: (bool? value) {
                                 setState(() {
