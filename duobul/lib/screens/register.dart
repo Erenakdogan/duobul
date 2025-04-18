@@ -29,22 +29,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue[50],
+      backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
         title: const Text('Aramıza Hoşgeldin!'),
         centerTitle: true,
-        backgroundColor: Colors.blue[100],
+        backgroundColor: Theme.of(context).primaryColor,
       ),
       body: Stack(
         children: [
           // Arka plan ikonları
           Positioned(
-            top: -50,
-            right: -30,
-            child: Icon(
-              Icons.sports_esports,
-              size: 200,
-              color: Colors.lightBlue.withOpacity(0.2),
+            top: 0,
+            right: 130,
+            child: Transform.rotate(
+              angle: -0.7,
+              child: Icon(
+                Icons.sports_esports,
+                size: 200,
+                color: Theme.of(context)
+                    .colorScheme
+                    .secondary
+                    .withValues(alpha: 0.8),
+              ),
             ),
           ),
           Positioned(
@@ -55,7 +61,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Icon(
                 Icons.gamepad,
                 size: 200,
-                color: Colors.lightBlue.withOpacity(0.2),
+                color: Theme.of(context)
+                    .colorScheme
+                    .secondary
+                    .withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -67,7 +76,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Icon(
                 Icons.games,
                 size: 150,
-                color: Colors.lightBlue.withOpacity(0.2),
+                color: Theme.of(context)
+                    .colorScheme
+                    .secondary
+                    .withValues(alpha: 0.4),
               ),
             ),
           ),
@@ -86,26 +98,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       TextFormField(
                         controller: _usernameController,
                         decoration: InputDecoration(
-                          labelText: 'İsim Soyisim',
-                          labelStyle: TextStyle(color: Colors.lightBlue[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide(
-                                color: Colors.lightBlue.withOpacity(0.5)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide(
-                                color: Colors.lightBlue[400]!, width: 2),
-                          ),
-                          prefixIcon:
-                              Icon(Icons.person, color: Colors.lightBlue[400]),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
+                            labelText: 'İsim Soyisim',
+                            prefixIcon: Icon(
+                              Icons.person,
+                            )),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Lütfen isim soyisim giriniz';
@@ -117,25 +113,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       TextFormField(
                         controller: _emailController,
                         decoration: InputDecoration(
-                          labelText: 'E-posta',
-                          labelStyle: TextStyle(color: Colors.lightBlue[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
+                          label: Text('E-posta'),
+                          prefixIcon: Icon(
+                            Icons.email,
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide(
-                                color: Colors.lightBlue.withOpacity(0.5)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide(
-                                color: Colors.lightBlue[400]!, width: 2),
-                          ),
-                          prefixIcon:
-                              Icon(Icons.email, color: Colors.lightBlue[400]),
-                          filled: true,
-                          fillColor: Colors.white,
                         ),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
@@ -152,26 +133,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       TextFormField(
                         controller: _passwordController,
                         decoration: InputDecoration(
-                          labelText: 'Şifre',
-                          labelStyle: TextStyle(color: Colors.lightBlue[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide(
-                                color: Colors.lightBlue.withOpacity(0.5)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide(
-                                color: Colors.lightBlue[400]!, width: 2),
-                          ),
-                          prefixIcon:
-                              Icon(Icons.lock, color: Colors.lightBlue[400]),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
+                            labelText: 'Şifre',
+                            prefixIcon: Icon(
+                              Icons.lock,
+                            )),
                         obscureText: true,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -187,26 +152,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       TextFormField(
                         controller: _confirmPasswordController,
                         decoration: InputDecoration(
-                          labelText: 'Şifreyi Tekrar Girin',
-                          labelStyle: TextStyle(color: Colors.lightBlue[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide(
-                                color: Colors.lightBlue.withOpacity(0.5)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide(
-                                color: Colors.lightBlue[400]!, width: 2),
-                          ),
-                          prefixIcon:
-                              Icon(Icons.lock, color: Colors.lightBlue[400]),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
+                            labelText: 'Şifreyi Tekrar Girin',
+                            prefixIcon: Icon(
+                              Icons.lock,
+                            )),
                         obscureText: true,
                         validator: (value) {
                           if (value == null || value.isEmpty) {

@@ -26,22 +26,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue[50],
+      backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
         title: const Text('Giriş Yap'),
         centerTitle: true,
-        backgroundColor: Colors.blue[100],
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: Stack(
         children: [
           // Arka plan ikonları
           Positioned(
-            top: -50,
-            right: -30,
-            child: Icon(
-              Icons.sports_esports,
-              size: 200,
-              color: Colors.lightBlue.withOpacity(0.2),
+            top: 0,
+            right: 130,
+            child: Transform.rotate(
+              angle: -0.7,
+              child: Icon(
+                Icons.sports_esports,
+                size: 200,
+                color: Theme.of(context)
+                    .colorScheme
+                    .secondary
+                    .withValues(alpha: 0.8),
+              ),
             ),
           ),
           Positioned(
@@ -52,7 +58,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
               child: Icon(
                 Icons.gamepad,
                 size: 200,
-                color: Colors.lightBlue.withOpacity(0.2),
+                color: Theme.of(context)
+                    .colorScheme
+                    .secondary
+                    .withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -64,7 +73,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
               child: Icon(
                 Icons.games,
                 size: 150,
-                color: Colors.lightBlue.withOpacity(0.2),
+                color: Theme.of(context)
+                    .colorScheme
+                    .secondary
+                    .withValues(alpha: 0.4),
               ),
             ),
           ),
@@ -84,24 +96,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         controller: _emailController,
                         decoration: InputDecoration(
                           labelText: 'E-posta',
-                          labelStyle: TextStyle(color: Colors.lightBlue[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
+                          prefixIcon: Icon(
+                            Icons.email,
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide(
-                                color: Colors.lightBlue.withOpacity(0.5)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide(
-                                color: Colors.lightBlue[400]!, width: 2),
-                          ),
-                          prefixIcon:
-                              Icon(Icons.email, color: Colors.lightBlue[400]),
-                          filled: true,
-                          fillColor: Colors.white,
                         ),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
@@ -119,24 +116,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         controller: _passwordController,
                         decoration: InputDecoration(
                           labelText: 'Şifre',
-                          labelStyle: TextStyle(color: Colors.lightBlue[700]),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
+                          prefixIcon: Icon(
+                            Icons.lock,
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide(
-                                color: Colors.lightBlue.withOpacity(0.5)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide(
-                                color: Colors.lightBlue[400]!, width: 2),
-                          ),
-                          prefixIcon:
-                              Icon(Icons.lock, color: Colors.lightBlue[400]),
-                          filled: true,
-                          fillColor: Colors.white,
                         ),
                         obscureText: true,
                         validator: (value) {
@@ -206,7 +188,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         child: Text(
                           'Hesabınız yok mu? Kayıt olun',
                           style: TextStyle(
-                            color: Colors.lightBlue[700],
+                            color: Theme.of(context).colorScheme.tertiary,
                             fontSize: 14,
                           ),
                         ),
