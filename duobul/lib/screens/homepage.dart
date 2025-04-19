@@ -2,9 +2,21 @@ import 'package:duobul/screens/profile_page.dart';
 import 'package:duobul/utility/chat_box.dart';
 import 'package:flutter/material.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class HomeScreen extends StatefulWidget {
+  final String email;
+  final String username;
 
+  const HomeScreen({
+    super.key,
+    required this.email,
+    required this.username,
+  });
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,8 +37,15 @@ class HomeScreen extends StatelessWidget {
             icon: Icon(Icons.person,
                 color: Theme.of(context).colorScheme.tertiary),
             onPressed: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const ProfilePage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProfilePage(
+                    email: widget.email,
+                    username: widget.username,
+                  ),
+                ),
+              );
             },
           ),
         ],

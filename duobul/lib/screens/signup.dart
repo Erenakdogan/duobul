@@ -142,9 +142,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               if (response['success'] == true) {
                                 Navigator.of(context).pushReplacement(
                                   MaterialPageRoute(
-                                    builder: (context) => const LoadingScreen(
-                                      nextScreen: HomeScreen(),
-                                      delay: Duration(seconds: 3),
+                                    builder: (context) => LoadingScreen(
+                                      nextScreen: HomeScreen(
+                                        email: _emailController.text,
+                                        username:
+                                            response['username'] ?? 'Kullanıcı',
+                                      ),
+                                      delay: const Duration(seconds: 3),
                                     ),
                                   ),
                                 );
