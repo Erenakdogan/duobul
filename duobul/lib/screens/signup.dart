@@ -167,12 +167,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          backgroundColor: Colors.lightBlue[400],
-                          foregroundColor: Colors.white,
                         ),
                         child: const Text('Giriş Yap'),
                       ),
