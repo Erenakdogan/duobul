@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
 import 'loading_screen.dart';
 import 'homepage.dart';
@@ -34,6 +35,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   ];
   File? _profilePhoto;
   final TextEditingController _usernameController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -47,7 +49,23 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     super.dispose();
   }
 
-
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        setState(() {
+          _profilePhoto = File(image.path);
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Fotoğraf seçilirken hata oluştu: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,6 +82,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           children: [
             // Profil Fotoğrafı
             GestureDetector(
+              onTap: _pickImage,
               child: Container(
                 width: 150,
                 height: 150,
@@ -220,6 +239,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () async {
+                if (_selectedGames.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Lütfen en az bir oyun seçin'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
                 try {
                   final apiService = ApiService();
                   final response = await apiService.updateProfile(
@@ -236,6 +265,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                           nextScreen: HomeScreen(
                             email: widget.email,
                             username: _usernameController.text,
+                            favoriteGames: _selectedGames.join(','),
                           ),
                           delay: const Duration(seconds: 2),
                         ),

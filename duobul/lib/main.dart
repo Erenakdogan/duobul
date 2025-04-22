@@ -1,6 +1,6 @@
 import 'package:duobul/ThemeData/themedata.dart';
 import 'package:flutter/material.dart';
-import 'screens/homepage.dart';
+import 'screens/signup.dart';
 
 void main() {
   runApp(const MainApp());
@@ -14,10 +14,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: duoBulDarkPurpleTheme,
-      home: const HomeScreen(
-        email: 'default@example.com',
-        username: 'Kullanıcı',
-      ),
+      home: const SignUpScreen(),
     );
   }
 }

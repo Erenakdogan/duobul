@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import 'settings.dart';
 
 class ProfilePage extends StatefulWidget {
   final String email;
@@ -92,6 +93,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 final profileData = snapshot.data!;
                 final favoriteGames =
                     profileData['favorite_games']?.toString().split(',') ?? [];
+                final username = profileData['username'] ?? widget.username;
 
                 return Column(
                   children: [
@@ -144,7 +146,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           const SizedBox(height: 20),
                           // Kullanıcı adı
                           Text(
-                            widget.username,
+                            username,
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -220,6 +222,28 @@ class _ProfilePageState extends State<ProfilePage> {
                             Theme.of(context).colorScheme.onPrimary,
                       ),
                       child: const Text('Profili Düzenle'),
+                    ),
+                    const SizedBox(height: 10),
+                    // Ayarlar butonu
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsScreen(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor:
+                            Theme.of(context).colorScheme.onPrimary,
+                      ),
+                      child: const Text('Ayarlar'),
                     ),
                   ],
                 );

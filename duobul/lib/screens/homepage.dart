@@ -1,15 +1,19 @@
 import 'package:duobul/screens/profile_page.dart';
 import 'package:duobul/utility/chat_box.dart';
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
+import '../widgets/game_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   final String email;
   final String username;
+  final String favoriteGames;
 
   const HomeScreen({
     super.key,
     required this.email,
     required this.username,
+    required this.favoriteGames,
   });
 
   @override
@@ -17,6 +21,36 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late List<String> _favoriteGamesList;
+  final ApiService _apiService = ApiService();
+
+  @override
+  void initState() {
+    super.initState();
+    _favoriteGamesList = widget.favoriteGames
+        .split(',')
+        .where((game) => game.isNotEmpty)
+        .toList();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final profileData = await _apiService.getProfile(widget.email);
+      if (profileData['success'] == true) {
+        setState(() {
+          _favoriteGamesList = (profileData['favorite_games'] ?? '')
+              .toString()
+              .split(',')
+              .where((game) => game.isNotEmpty)
+              .toList();
+        });
+      }
+    } catch (e) {
+      print('Profil yüklenirken hata: $e');
+    }
+  }
+
   final List<String> _popularGames = [
     'League of Legends',
     'Valorant',
@@ -78,10 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Icon(
                 Icons.sports_esports,
                 size: 200,
-                color: Theme.of(context)
-                    .colorScheme
-                    .secondary
-                    .withValues(alpha: 0.6),
+                color: Theme.of(context).colorScheme.secondary.withOpacity(0.6),
               ),
             ),
           ),
@@ -93,10 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Icon(
                 Icons.gamepad,
                 size: 200,
-                color: Theme.of(context)
-                    .colorScheme
-                    .secondary
-                    .withValues(alpha: 0.6),
+                color: Theme.of(context).colorScheme.secondary.withOpacity(0.6),
               ),
             ),
           ),
@@ -108,10 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Icon(
                 Icons.games,
                 size: 150,
-                color: Theme.of(context)
-                    .colorScheme
-                    .secondary
-                    .withValues(alpha: 0.4),
+                color: Theme.of(context).colorScheme.secondary.withOpacity(0.4),
               ),
             ),
           ),
@@ -133,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Theme.of(context)
                             .colorScheme
                             .primary
-                            .withValues(alpha: 0.2),
+                            .withOpacity(0.2),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -162,28 +187,98 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                SizedBox(
-                  height: 150,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      _buildGameCard('League of Legends', context),
-                      _buildGameCard('Valorant', context),
-                      _buildGameCard('CS:GO', context),
-                      _buildGameCard('Fortnite', context),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // Son aktiviteler
-                Center(
-                  child: Text(
-                    'Son Aktiviteler',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onPrimary,
+                // Favori Oyunlar
+                if (_favoriteGamesList.isNotEmpty) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Favori Oyunların',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: _favoriteGamesList
+                              .map(
+                                (game) => GestureDetector(
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) =>
+                                          GameDialog(gameName: game),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 15, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .tertiary,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.games,
+                                          size: 20,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onPrimary,
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          game,
+                                          style: TextStyle(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onPrimary,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+                // Son aktiviteler
+                Text(
+                  'Son Aktiviteler',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -211,43 +306,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildGameCard(String gameName, context) {
-    return Container(
-      width: 120,
-      margin: const EdgeInsets.only(right: 10),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.games,
-            size: 40,
-            color: Theme.of(context).colorScheme.tertiary,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            gameName,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onPrimary,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildActivityList() {
     return ListView.builder(
       shrinkWrap: true,
@@ -262,10 +320,7 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: 0.2),
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                 blurRadius: 5,
                 offset: const Offset(0, 3),
               ),
@@ -370,7 +425,8 @@ class GameSearchDelegate extends SearchDelegate<String> {
                   value: selectedGame,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   ),
                   items: games.map((game) {
                     return DropdownMenuItem(
@@ -395,7 +451,8 @@ class GameSearchDelegate extends SearchDelegate<String> {
                     value: selectedRank,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     ),
                     items: _getRanksForGame(selectedGame!).map((rank) {
                       return DropdownMenuItem(
@@ -420,7 +477,8 @@ class GameSearchDelegate extends SearchDelegate<String> {
                   value: selectedRegion,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   ),
                   items: regions.map((region) {
                     return DropdownMenuItem(
@@ -446,7 +504,9 @@ class GameSearchDelegate extends SearchDelegate<String> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (selectedGame != null && selectedRank != null && selectedRegion != null) {
+                if (selectedGame != null &&
+                    selectedRank != null &&
+                    selectedRegion != null) {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
@@ -612,9 +672,10 @@ class GameSearchDelegate extends SearchDelegate<String> {
       return _buildEmptySearch(context);
     }
 
-    final results = games.where((game) => 
-      game.toLowerCase().contains(query.toLowerCase())).toList();
-    
+    final results = games
+        .where((game) => game.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+
     if (results.isEmpty) {
       return _buildNoResults(context);
     }
@@ -628,9 +689,10 @@ class GameSearchDelegate extends SearchDelegate<String> {
       return _buildEmptySearch(context);
     }
 
-    final suggestions = games.where((game) => 
-      game.toLowerCase().contains(query.toLowerCase())).toList();
-    
+    final suggestions = games
+        .where((game) => game.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+
     return _buildResultsList(context, suggestions);
   }
 
