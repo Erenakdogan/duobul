@@ -17,6 +17,24 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final List<String> _popularGames = [
+    'League of Legends',
+    'Valorant',
+    'CS:GO',
+    'Fortnite',
+    'PUBG',
+    'Apex Legends',
+    'Dota 2',
+    'Rocket League',
+  ];
+
+  void _showGameSearch(BuildContext context) {
+    showSearch(
+      context: context,
+      delegate: GameSearchDelegate(_popularGames),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,9 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         leading: IconButton(
           icon: const Icon(Icons.search),
-          onPressed: () {
-            // Arama sayfasına yönlendirme
-          },
+          onPressed: () => _showGameSearch(context),
           color: Theme.of(context).colorScheme.tertiary,
         ),
         actions: [
@@ -179,14 +195,11 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) {
-              return Dialog(
-                backgroundColor: Colors.transparent,
-                child: chat_box(), // chat_box widget'ını burada çağırıyoruz
-              );
-            },
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const chat_box(),
+            ),
           );
         },
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -197,36 +210,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-/*
-  Widget _buildQuickAccessButton(
-    BuildContext context,
-    IconData icon,
-    String label,
-    Color color,
-  ) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(15),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Icon(icon, color: Colors.white, size: 30),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.blue[700],
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-  */
 
   Widget _buildGameCard(String gameName, context) {
     return Container(
@@ -328,6 +311,537 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class GameSearchDelegate extends SearchDelegate<String> {
+  final List<String> games;
+
+  GameSearchDelegate(this.games);
+
+  @override
+  List<Widget>? buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.filter_list),
+        onPressed: () {
+          _showFilterDialog(context);
+        },
+      ),
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  void _showFilterDialog(BuildContext context) {
+    String? selectedGame;
+    String? selectedRank;
+    String? selectedRegion;
+    final List<String> regions = [
+      'Türkiye',
+      'Avrupa',
+      'Kuzey Amerika',
+      'Güney Amerika',
+      'Asya',
+      'Okyanusya'
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Filtrele'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Oyun Seçin',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: selectedGame,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                  items: games.map((game) {
+                    return DropdownMenuItem(
+                      value: game,
+                      child: Text(game),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedGame = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+                if (selectedGame != null) ...[
+                  const Text(
+                    'Rank Seçin',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: selectedRank,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    ),
+                    items: _getRanksForGame(selectedGame!).map((rank) {
+                      return DropdownMenuItem(
+                        value: rank,
+                        child: Text(rank),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedRank = value;
+                      });
+                    },
+                  ),
+                ],
+                const SizedBox(height: 16),
+                const Text(
+                  'Bölge Seçin',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: selectedRegion,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                  items: regions.map((region) {
+                    return DropdownMenuItem(
+                      value: region,
+                      child: Text(region),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedRegion = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('İptal'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (selectedGame != null && selectedRank != null && selectedRegion != null) {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SearchResultsScreen(
+                        game: selectedGame!,
+                        rank: selectedRank!,
+                        region: selectedRegion!,
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Ara'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<String> _getRanksForGame(String game) {
+    switch (game) {
+      case 'League of Legends':
+        return [
+          'Iron',
+          'Bronze',
+          'Silver',
+          'Gold',
+          'Platinum',
+          'Diamond',
+          'Master',
+          'Grandmaster',
+          'Challenger'
+        ];
+      case 'Valorant':
+        return [
+          'Iron',
+          'Bronze',
+          'Silver',
+          'Gold',
+          'Platinum',
+          'Diamond',
+          'Ascendant',
+          'Immortal',
+          'Radiant'
+        ];
+      case 'CS:GO':
+        return [
+          'Silver I',
+          'Silver II',
+          'Silver III',
+          'Silver IV',
+          'Silver Elite',
+          'Silver Elite Master',
+          'Gold Nova I',
+          'Gold Nova II',
+          'Gold Nova III',
+          'Gold Nova Master',
+          'Master Guardian I',
+          'Master Guardian II',
+          'Master Guardian Elite',
+          'Distinguished Master Guardian',
+          'Legendary Eagle',
+          'Legendary Eagle Master',
+          'Supreme Master First Class',
+          'Global Elite'
+        ];
+      case 'Fortnite':
+        return [
+          'Bronze',
+          'Silver',
+          'Gold',
+          'Platinum',
+          'Diamond',
+          'Elite',
+          'Champion',
+          'Unreal'
+        ];
+      case 'PUBG':
+        return [
+          'Bronze',
+          'Silver',
+          'Gold',
+          'Platinum',
+          'Diamond',
+          'Master',
+          'Grandmaster'
+        ];
+      case 'Apex Legends':
+        return [
+          'Bronze',
+          'Silver',
+          'Gold',
+          'Platinum',
+          'Diamond',
+          'Master',
+          'Predator'
+        ];
+      case 'Dota 2':
+        return [
+          'Herald',
+          'Guardian',
+          'Crusader',
+          'Archon',
+          'Legend',
+          'Ancient',
+          'Divine',
+          'Immortal'
+        ];
+      case 'Rocket League':
+        return [
+          'Bronze I',
+          'Bronze II',
+          'Bronze III',
+          'Silver I',
+          'Silver II',
+          'Silver III',
+          'Gold I',
+          'Gold II',
+          'Gold III',
+          'Platinum I',
+          'Platinum II',
+          'Platinum III',
+          'Diamond I',
+          'Diamond II',
+          'Diamond III',
+          'Champion I',
+          'Champion II',
+          'Champion III',
+          'Grand Champion I',
+          'Grand Champion II',
+          'Grand Champion III',
+          'Supersonic Legend'
+        ];
+      default:
+        return [
+          'Bronze',
+          'Silver',
+          'Gold',
+          'Platinum',
+          'Diamond',
+          'Master',
+          'Grandmaster',
+          'Challenger'
+        ];
+    }
+  }
+
+  @override
+  Widget? buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, '');
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    if (query.isEmpty) {
+      return _buildEmptySearch(context);
+    }
+
+    final results = games.where((game) => 
+      game.toLowerCase().contains(query.toLowerCase())).toList();
+    
+    if (results.isEmpty) {
+      return _buildNoResults(context);
+    }
+
+    return _buildResultsList(context, results);
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    if (query.isEmpty) {
+      return _buildEmptySearch(context);
+    }
+
+    final suggestions = games.where((game) => 
+      game.toLowerCase().contains(query.toLowerCase())).toList();
+    
+    return _buildResultsList(context, suggestions);
+  }
+
+  Widget _buildEmptySearch(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: MediaQuery.of(context).size.width * 0.8,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 5,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: 'Oyun ara...',
+                border: InputBorder.none,
+                icon: Icon(
+                  Icons.search,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              onChanged: (value) {
+                query = value;
+              },
+            ),
+          ),
+          const SizedBox(height: 32),
+          Icon(
+            Icons.games,
+            size: 64,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Oyun aramak için yazın veya filtre butonuna tıklayın',
+            style: TextStyle(
+              fontSize: 16,
+              color: Theme.of(context).colorScheme.onBackground,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoResults(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: MediaQuery.of(context).size.width * 0.8,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 5,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: 'Oyun ara...',
+                border: InputBorder.none,
+                icon: Icon(
+                  Icons.search,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              onChanged: (value) {
+                query = value;
+              },
+            ),
+          ),
+          const SizedBox(height: 32),
+          Icon(
+            Icons.search_off,
+            size: 64,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Sonuç bulunamadı',
+            style: TextStyle(
+              fontSize: 16,
+              color: Theme.of(context).colorScheme.onBackground,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultsList(BuildContext context, List<String> results) {
+    return Column(
+      children: [
+        Container(
+          width: MediaQuery.of(context).size.width,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 5,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: TextField(
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: 'Oyun ara...',
+              border: InputBorder.none,
+              icon: Icon(
+                Icons.search,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            onChanged: (value) {
+              query = value;
+            },
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: results.length,
+            itemBuilder: (context, index) {
+              final game = results[index];
+              return ListTile(
+                leading: Icon(
+                  Icons.games,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                title: Text(game),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SearchResultsScreen(
+                        game: game,
+                        rank: 'Tüm Ranklar',
+                        region: 'Tüm Bölgeler',
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class SearchResultsScreen extends StatelessWidget {
+  final String game;
+  final String rank;
+  final String region;
+
+  const SearchResultsScreen({
+    super.key,
+    required this.game,
+    required this.rank,
+    required this.region,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('$game - $rank - $region'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search,
+              size: 64,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Arama sonuçları burada gösterilecek',
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onBackground,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
