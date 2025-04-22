@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
-import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
 import 'loading_screen.dart';
 import 'homepage.dart';
@@ -34,7 +33,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     'Rocket League'
   ];
   File? _profilePhoto;
-  final ImagePicker _picker = ImagePicker();
   final TextEditingController _usernameController = TextEditingController();
 
   @override
@@ -49,14 +47,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _profilePhoto = File(image.path);
-      });
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +64,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           children: [
             // Profil Fotoğrafı
             GestureDetector(
-              onTap: _pickImage,
               child: Container(
                 width: 150,
                 height: 150,

@@ -1,5 +1,6 @@
+import 'package:duobul/ThemeData/themedata.dart';
 import 'package:flutter/material.dart';
-import 'screens/signup.dart';
+import 'screens/homepage.dart';
 
 void main() {
   runApp(const MainApp());
@@ -12,11 +13,11 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+      theme: duoBulDarkPurpleTheme,
+      home: const HomeScreen(
+        email: 'default@example.com',
+        username: 'Kullanıcı',
       ),
-      home: const SignUpScreen(),
     );
   }
 }

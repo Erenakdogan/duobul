@@ -210,12 +210,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          backgroundColor: Colors.lightBlue[400],
-                          foregroundColor: Colors.white,
                         ),
                         child: const Text('Kayıt Ol'),
                       ),
