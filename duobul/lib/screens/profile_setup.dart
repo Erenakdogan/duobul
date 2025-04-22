@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
 import 'loading_screen.dart';
 import 'homepage.dart';
@@ -23,8 +25,38 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     'League of Legends',
     'CS:GO',
     'Valorant',
-    'Battlefield 1'
+    'Battlefield 1',
+    'Fortnite',
+    'PUBG',
+    'Apex Legends',
+    'Dota 2',
+    'Overwatch',
+    'Rocket League'
   ];
+  File? _profilePhoto;
+  final ImagePicker _picker = ImagePicker();
+  final TextEditingController _usernameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _usernameController.text = widget.username;
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _profilePhoto = File(image.path);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,13 +71,96 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
+            // Profil Fotoğrafı
+            GestureDetector(
+              onTap: _pickImage,
+              child: Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Theme.of(context).colorScheme.primary,
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.tertiary,
+                    width: 2,
+                  ),
+                ),
+                child: _profilePhoto != null
+                    ? ClipOval(
+                        child: Image.file(
+                          _profilePhoto!,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Icon(
+                        Icons.add_a_photo,
+                        size: 50,
+                        color: Theme.of(context).colorScheme.tertiary,
+                      ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Profil Fotoğrafı Ekle',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Kullanıcı Adı Girişi
             Container(
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(25),
                 boxShadow: [
                   BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                    blurRadius: 10,
+                    spreadRadius: 5,
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _usernameController,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Kullanıcı Adı',
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.tertiary,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.tertiary,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.tertiary,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.2),
                     blurRadius: 10,
                     spreadRadius: 5,
                   ),
@@ -55,7 +170,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               child: Column(
                 children: [
                   Text(
-                    'Hoş geldin, ${widget.username}!',
+                    'Hoş geldin, ${_usernameController.text}!',
                     style: TextStyle(
                       fontSize: 20,
                       color: Theme.of(context).colorScheme.onPrimary,
@@ -65,26 +180,37 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   ExpansionTile(
                     title: Text(
                       'Favori Oyunlar',
-                      style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary),
                     ),
                     collapsedIconColor: Theme.of(context).colorScheme.tertiary,
                     collapsedShape: RoundedRectangleBorder(
-                      borderRadius: BorderRadiusDirectional.only(
-                        topStart: Radius.circular(25),
-                        topEnd: Radius.circular(25),
-                      )),
-                    leading: Icon(Icons.games, color: Theme.of(context).colorScheme.tertiary),
+                        borderRadius: BorderRadiusDirectional.only(
+                      topStart: Radius.circular(25),
+                      topEnd: Radius.circular(25),
+                    )),
+                    leading: Icon(Icons.games,
+                        color: Theme.of(context).colorScheme.tertiary),
                     backgroundColor: Theme.of(context).colorScheme.primary,
-                    collapsedBackgroundColor: Theme.of(context).colorScheme.primary,
+                    collapsedBackgroundColor:
+                        Theme.of(context).colorScheme.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
-                      side:
-                          BorderSide(color: Theme.of(context).colorScheme.tertiary, width: 2),
+                      side: BorderSide(
+                          color: Theme.of(context).colorScheme.tertiary,
+                          width: 2),
                     ),
                     children: _games
                         .map((game) => CheckboxListTile(
-                              title: Text(game),
-                              checkColor: Theme.of(context).colorScheme.tertiary,
+                              title: Text(
+                                game,
+                                style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary),
+                              ),
+                              checkColor:
+                                  Theme.of(context).colorScheme.tertiary,
                               value: _selectedGames.contains(game),
                               onChanged: (bool? value) {
                                 setState(() {
@@ -109,13 +235,18 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   final response = await apiService.updateProfile(
                     widget.email,
                     _selectedGames.join(','),
+                    _profilePhoto,
+                    _usernameController.text,
                   );
 
                   if (response['success'] == true) {
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
                         builder: (context) => LoadingScreen(
-                          nextScreen: const HomeScreen(),
+                          nextScreen: HomeScreen(
+                            email: widget.email,
+                            username: _usernameController.text,
+                          ),
                           delay: const Duration(seconds: 2),
                         ),
                       ),
@@ -142,8 +273,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25),
                 ),
-                backgroundColor: Colors.lightBlue[400],
-                foregroundColor: Colors.white,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
               ),
               child: const Text('Profili Kaydet'),
             ),
