@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'loading_screen.dart';
 import 'profile_setup.dart';
+import 'signup.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -34,6 +35,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         title: const Text('Aramıza Hoşgeldin!'),
         centerTitle: true,
         backgroundColor: Theme.of(context).primaryColor,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => const SignUpScreen(),
+              ),
+            );
+          },
+        ),
       ),
       body: Stack(
         children: [
@@ -209,8 +220,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             }
                           }
                         },
-                        style: ElevatedButton.styleFrom(
-                        ),
+                        style: ElevatedButton.styleFrom(),
                         child: const Text('Kayıt Ol'),
                       ),
                       const SizedBox(height: 20),

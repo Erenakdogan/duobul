@@ -147,6 +147,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                         email: _emailController.text,
                                         username:
                                             response['username'] ?? 'Kullanıcı',
+                                        favoriteGames: '',
                                       ),
                                       delay: const Duration(seconds: 3),
                                     ),
@@ -170,8 +171,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             }
                           }
                         },
-                        style: ElevatedButton.styleFrom(
-                        ),
+                        style: ElevatedButton.styleFrom(),
                         child: const Text('Giriş Yap'),
                       ),
                       const SizedBox(height: 16),

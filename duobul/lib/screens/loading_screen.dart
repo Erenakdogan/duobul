@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 class LoadingScreen extends StatefulWidget {
   final Widget nextScreen;
   final Duration delay;
@@ -59,7 +58,7 @@ class _LoadingScreenState extends State<LoadingScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue[50],
+      backgroundColor: Theme.of(context).colorScheme.background,
       body: Center(
         child: ScaleTransition(
           scale: _animation,
@@ -69,7 +68,7 @@ class _LoadingScreenState extends State<LoadingScreen>
               Icon(
                 Icons.sports_esports,
                 size: 100,
-                color: Colors.lightBlue[400],
+                color: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: 20),
               Text(
@@ -77,7 +76,7 @@ class _LoadingScreenState extends State<LoadingScreen>
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.lightBlue[700],
+                  color: Theme.of(context).colorScheme.onPrimary,
                 ),
               ),
             ],
