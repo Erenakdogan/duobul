@@ -6,7 +6,7 @@ header('Access-Control-Allow-Origin: *');
 $host = 'localhost';
 $dbname = 'duobul_db';
 $username = 'root';
-$password = '';
+$password = 'Sagu97714B';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
