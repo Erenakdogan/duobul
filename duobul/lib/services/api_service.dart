@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://10.0.2.2:8000'; // kendi IP'n
+  static const String baseUrl = 'http://192.168.0.4/api'; // kendi IP'n
 
   // Kullanıcı girişi
   Future<Map<String, dynamic>> login(String email, String password) async {
