@@ -18,12 +18,114 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   late Future<Map<String, dynamic>> _profileFuture;
+  late Future<List<Map<String, dynamic>>> _friendsFuture;
+  late Future<List<Map<String, dynamic>>> _friendRequestsFuture;
   final ApiService _apiService = ApiService();
+  final TextEditingController _friendEmailController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _profileFuture = _apiService.getProfile(widget.email);
+    _loadFriendsAndRequests();
+  }
+
+  void _loadFriendsAndRequests() {
+    setState(() {
+      _friendsFuture = _apiService.getFriends(widget.email);
+      _friendRequestsFuture = _apiService.getFriendRequests(widget.email);
+    });
+  }
+
+  Future<void> _showAddFriendDialog() async {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Arkadaş Ekle'),
+        content: TextField(
+          controller: _friendEmailController,
+          decoration: const InputDecoration(
+            labelText: 'Arkadaşın E-posta Adresi',
+            hintText: 'ornek@email.com',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('İptal'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (_friendEmailController.text.isNotEmpty) {
+                final response = await _apiService.sendFriendRequest(
+                  widget.email,
+                  _friendEmailController.text,
+                );
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(response['message']),
+                      backgroundColor:
+                          response['success'] ? Colors.green : Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Ekle'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showCommonGamesDialog(String friendEmail) async {
+    try {
+      final response = await _apiService.getCommonFavoriteGames(
+        widget.email,
+        friendEmail,
+      );
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Ortak Favori Oyunlar'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: response['common_games'] != null &&
+                      response['common_games'].isNotEmpty
+                  ? ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: response['common_games'].length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          title: Text(response['common_games'][index]),
+                        );
+                      },
+                    )
+                  : const Text('Ortak favori oyun bulunamadı'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Kapat'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Hata: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -207,6 +309,250 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                     const SizedBox(height: 20),
+                    // Arkadaşlar kartı
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Arkadaşlar',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.person_add),
+                                onPressed: _showAddFriendDialog,
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          FutureBuilder<List<Map<String, dynamic>>>(
+                            future: _friendsFuture,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              }
+
+                              if (snapshot.hasError) {
+                                return Text(
+                                  'Hata: ${snapshot.error}',
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
+                                );
+                              }
+
+                              final friends = snapshot.data ?? [];
+
+                              if (friends.isEmpty) {
+                                return Text(
+                                  'Henüz arkadaşınız yok',
+                                  style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.onPrimary,
+                                  ),
+                                );
+                              }
+
+                              return ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: friends.length,
+                                itemBuilder: (context, index) {
+                                  final friend = friends[index];
+                                  return ListTile(
+                                    title: Text(
+                                      friend['username'],
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary,
+                                      ),
+                                    ),
+                                    trailing: IconButton(
+                                      icon: const Icon(Icons.games),
+                                      onPressed: () => _showCommonGamesDialog(
+                                          friend['email']),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary,
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Arkadaşlık istekleri kartı
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Arkadaşlık İstekleri',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          FutureBuilder<List<Map<String, dynamic>>>(
+                            future: _friendRequestsFuture,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              }
+
+                              if (snapshot.hasError) {
+                                return Text(
+                                  'Hata: ${snapshot.error}',
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
+                                );
+                              }
+
+                              final requests = snapshot.data ?? [];
+
+                              if (requests.isEmpty) {
+                                return Text(
+                                  'Bekleyen arkadaşlık isteği yok',
+                                  style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.onPrimary,
+                                  ),
+                                );
+                              }
+
+                              return ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: requests.length,
+                                itemBuilder: (context, index) {
+                                  final request = requests[index];
+                                  return ListTile(
+                                    title: Text(
+                                      request['username'],
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimary,
+                                      ),
+                                    ),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.check),
+                                          onPressed: () async {
+                                            final response = await _apiService
+                                                .respondToFriendRequest(
+                                              request['email'],
+                                              widget.email,
+                                              'accepted',
+                                            );
+                                            if (mounted) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content:
+                                                      Text(response['message']),
+                                                  backgroundColor:
+                                                      response['success']
+                                                          ? Colors.green
+                                                          : Colors.red,
+                                                ),
+                                              );
+                                              _loadFriendsAndRequests();
+                                            }
+                                          },
+                                          color: Colors.green,
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.close),
+                                          onPressed: () async {
+                                            final response = await _apiService
+                                                .respondToFriendRequest(
+                                              request['email'],
+                                              widget.email,
+                                              'rejected',
+                                            );
+                                            if (mounted) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content:
+                                                      Text(response['message']),
+                                                  backgroundColor:
+                                                      response['success']
+                                                          ? Colors.green
+                                                          : Colors.red,
+                                                ),
+                                              );
+                                              _loadFriendsAndRequests();
+                                            }
+                                          },
+                                          color: Colors.red,
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     // Profil düzenleme butonu
                     ElevatedButton(
                       onPressed: () {
@@ -255,20 +601,25 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildGameChip(String gameName) {
+  Widget _buildGameChip(String game) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.tertiary,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        gameName,
+        game,
         style: TextStyle(
-          color: Theme.of(context).colorScheme.onPrimary,
-          fontSize: 14,
+          color: Theme.of(context).colorScheme.onTertiary,
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _friendEmailController.dispose();
+    super.dispose();
   }
 }

@@ -1,51 +1,88 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.0.4/api'; // kendi IP'n
+  static const String baseUrl = 'http://192.168.0.7/api';
+  final Duration timeout = const Duration(seconds: 10);
 
-  // Kullanıcı girişi
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  ApiService();
+
+  // Bağlantı kontrolü
+  Future<bool> checkConnection() async {
     try {
-      // Giden veriyi logla
-      print('📤 GÖNDERİLEN VERİ:');
-      print('email: $email');
-      print('password: $password');
-
-      final response = await http.post(
+      print('🔍 Bağlantı kontrolü yapılıyor: $baseUrl/login.php');
+      final response = await http.get(
         Uri.parse('$baseUrl/login.php'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: json.encode({
-          'email': email,
-          'password': password,
-        }),
-      );
+      ).timeout(timeout);
 
-      // Sunucudan gelen yanıtı logla
-      print('📥 YANIT STATUS CODE: ${response.statusCode}');
-      print('📥 YANIT BODY: ${response.body}');
+      print('📥 Bağlantı yanıtı: ${response.statusCode}');
+      print('📥 Yanıt içeriği: ${response.body}');
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('❌ Bağlantı kontrolü hatası: $e');
+      if (e is SocketException) {
+        print('❌ Soket hatası: Sunucuya bağlanılamıyor');
+      } else if (e is TimeoutException) {
+        print('❌ Zaman aşımı: Sunucu yanıt vermiyor');
+      }
+      return false;
+    }
+  }
+
+  // Kullanıcı girişi
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    try {
+      print('🔍 Giriş denemesi: $email');
+      print('🔍 API URL: $baseUrl/login.php');
+
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/login.php'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: json.encode({
+              'email': email,
+              'password': password,
+            }),
+          )
+          .timeout(timeout);
+
+      print('📥 Sunucu yanıtı: ${response.statusCode}');
+      print('📥 Yanıt içeriği: ${response.body}');
 
       if (response.statusCode == 200) {
         try {
           final data = json.decode(response.body);
           return data;
         } catch (e) {
-          print('❌ JSON DECODE HATASI: $e');
+          print('❌ JSON çözümleme hatası: $e');
           throw Exception('Sunucu yanıtı geçersiz format içeriyor');
         }
       } else {
-        print('❌ SUNUCU HATASI: ${response.statusCode}');
-        print('❌ HATA MESAJI: ${response.body}');
+        print('❌ Sunucu hatası: ${response.statusCode}');
         throw Exception('Sunucu hatası: ${response.statusCode}');
       }
+    } on SocketException catch (e) {
+      print('❌ Soket hatası: $e');
+      throw Exception(
+          'Sunucuya bağlanılamıyor. Lütfen internet bağlantınızı ve sunucu durumunu kontrol edin.');
+    } on TimeoutException catch (e) {
+      print('❌ Zaman aşımı: $e');
+      throw Exception(
+          'Sunucu yanıt vermiyor. Lütfen daha sonra tekrar deneyin.');
     } catch (e) {
-      print('❌ BAĞLANTI HATASI: $e');
-      throw Exception('Bağlantı hatası: $e');
+      print('❌ Bağlantı hatası: $e');
+      throw Exception('Bir hata oluştu: $e');
     }
   }
 
@@ -188,6 +225,131 @@ class ApiService {
       }
     } catch (e) {
       print('❌ Bağlantı hatası: $e');
+      throw Exception('Bağlantı hatası: $e');
+    }
+  }
+
+  // Arkadaşlık isteği gönder
+  Future<Map<String, dynamic>> sendFriendRequest(
+      String senderEmail, String receiverEmail) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/send_friend_request.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'sender_email': senderEmail,
+          'receiver_email': receiverEmail,
+        }),
+      );
+
+      return json.decode(response.body);
+    } catch (e) {
+      throw Exception('Bağlantı hatası: $e');
+    }
+  }
+
+  // Arkadaşlık isteklerini getir
+  Future<List<Map<String, dynamic>>> getFriendRequests(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/get_friend_requests.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'email': email,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success']) {
+          return List<Map<String, dynamic>>.from(data['requests']);
+        } else {
+          throw Exception(data['message']);
+        }
+      } else {
+        throw Exception('Sunucu hatası: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Bağlantı hatası: $e');
+    }
+  }
+
+  // Arkadaşlık isteğini kabul et/reddet
+  Future<Map<String, dynamic>> respondToFriendRequest(
+      String senderEmail, String receiverEmail, String status) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/respond_to_friend_request.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'sender_email': senderEmail,
+          'receiver_email': receiverEmail,
+          'status': status,
+        }),
+      );
+
+      return json.decode(response.body);
+    } catch (e) {
+      throw Exception('Bağlantı hatası: $e');
+    }
+  }
+
+  // Arkadaş listesini getir
+  Future<List<Map<String, dynamic>>> getFriends(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/get_friends.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'email': email,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success']) {
+          return List<Map<String, dynamic>>.from(data['friends']);
+        } else {
+          throw Exception(data['message']);
+        }
+      } else {
+        throw Exception('Sunucu hatası: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Bağlantı hatası: $e');
+    }
+  }
+
+  // Ortak favori oyunları getir
+  Future<Map<String, dynamic>> getCommonFavoriteGames(
+      String email1, String email2) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/get_common_favorite_games.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'email1': email1,
+          'email2': email2,
+        }),
+      );
+
+      return json.decode(response.body);
+    } catch (e) {
       throw Exception('Bağlantı hatası: $e');
     }
   }
