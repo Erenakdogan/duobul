@@ -33,3 +33,14 @@ FROM friendships f
 JOIN users u1 ON f.sender_email = u1.email
 JOIN users u2 ON f.receiver_email = u2.email
 WHERE f.status = 'accepted';
+
+CREATE TABLE messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sender_email VARCHAR(255) NOT NULL,
+    receiver_email VARCHAR(255) NOT NULL,
+    message_text TEXT NOT NULL,
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_read BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (sender_email) REFERENCES users(email),
+    FOREIGN KEY (receiver_email) REFERENCES users(email)
+);

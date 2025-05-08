@@ -1,6 +1,6 @@
 import 'package:duobul/screens/profile_page.dart';
 import "SteamPage.dart";
-import 'SteamPageWithID.dart' ; 
+import 'SteamPageWithID.dart';
 import 'package:duobul/utility/chat_box.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
@@ -70,7 +70,6 @@ class _HomeScreenState extends State<HomeScreen> {
       delegate: GameSearchDelegate(_popularGames),
     );
   }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -296,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const chat_box(),
+              builder: (context) => chat_box(currentUserEmail: widget.email),
             ),
           );
         },
@@ -377,8 +376,6 @@ class GameSearchDelegate extends SearchDelegate<String> {
   final List<String> games;
 
   GameSearchDelegate(this.games);
-  
-  
 
   @override
   List<Widget>? buildActions(BuildContext context) {
@@ -389,12 +386,13 @@ class GameSearchDelegate extends SearchDelegate<String> {
           _showFilterDialog(context);
         },
       ),
-       IconButton(
+      IconButton(
         icon: const Icon(Icons.search),
         onPressed: () {
           _searchWithSteamID(context); // Yeni buton burada çağrılıyor
         },
-        tooltip: 'Search with Steam ID',),
+        tooltip: 'Search with Steam ID',
+      ),
       IconButton(
         icon: const Icon(Icons.clear),
         onPressed: () {
@@ -403,36 +401,38 @@ class GameSearchDelegate extends SearchDelegate<String> {
       ),
     ];
   }
-   void _searchWithSteamID(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Search with Steam ID'),
-      content: TextField(
-        decoration: const InputDecoration(
-          hintText: 'Enter Steam ID',
-        ),
-        onSubmitted: (steamID) {
-          Navigator.pop(context); // Dialog'u kapat
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SteamPageWithID(steamId: steamID), // SteamPageWithID'ye yönlendir
-            ),
-          );
-        },
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
+
+  void _searchWithSteamID(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Search with Steam ID'),
+        content: TextField(
+          decoration: const InputDecoration(
+            hintText: 'Enter Steam ID',
+          ),
+          onSubmitted: (steamID) {
             Navigator.pop(context); // Dialog'u kapat
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SteamPageWithID(
+                    steamId: steamID), // SteamPageWithID'ye yönlendir
+              ),
+            );
           },
-          child: const Text('Cancel'),
         ),
-      ],
-    ),
-  );
-}
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Dialog'u kapat
+            },
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showFilterDialog(BuildContext context) {
     String? selectedGame;
@@ -947,5 +947,4 @@ class SearchResultsScreen extends StatelessWidget {
       ),
     );
   }
-  
 }

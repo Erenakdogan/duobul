@@ -353,4 +353,91 @@ class ApiService {
       throw Exception('Bağlantı hatası: $e');
     }
   }
+
+  // Mesaj gönderme
+  Future<Map<String, dynamic>> sendMessage(
+      String senderEmail, String receiverEmail, String messageText) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/send_message.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'sender_email': senderEmail,
+          'receiver_email': receiverEmail,
+          'message_text': messageText,
+        }),
+      );
+
+      return json.decode(response.body);
+    } catch (e) {
+      throw Exception('Bağlantı hatası: $e');
+    }
+  }
+
+  // Mesajları getirme
+  Future<List<Map<String, dynamic>>> getMessages(
+      String userEmail, String friendEmail) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/get_messages.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'user_email': userEmail,
+          'friend_email': friendEmail,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success']) {
+          return List<Map<String, dynamic>>.from(data['messages']);
+        } else {
+          throw Exception(data['error']);
+        }
+      } else {
+        throw Exception('Sunucu hatası: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Bağlantı hatası: $e');
+    }
+  }
+
+  // Okunmamış mesaj sayılarını getirme
+  Future<Map<String, int>> getUnreadMessageCounts(String userEmail) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/get_unread_messages.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'user_email': userEmail,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success']) {
+          Map<String, int> unreadCounts = {};
+          for (var item in data['unread_counts']) {
+            unreadCounts[item['sender_email']] = item['unread_count'];
+          }
+          return unreadCounts;
+        } else {
+          throw Exception(data['error']);
+        }
+      } else {
+        throw Exception('Sunucu hatası: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Bağlantı hatası: $e');
+    }
+  }
 }
