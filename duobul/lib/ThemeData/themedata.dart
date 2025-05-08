@@ -80,3 +80,82 @@ final ThemeData duoBulDarkPurpleTheme = ThemeData(
     ),
   ),
 );
+
+final ThemeData duoBulLightPurpleTheme = ThemeData(
+  brightness: Brightness.light,
+  scaffoldBackgroundColor: const Color(0xFFF3F0FF), // açık arka plan
+  primaryColor: const Color(0xFF3C096C), // mor
+
+  colorScheme: ColorScheme.fromSeed(
+    seedColor: const Color(0xFF3C096C),
+    brightness: Brightness.light,
+    primary: const Color(0xFF3C096C),
+    secondary: const Color(0xFFD0A2F7),
+    tertiary: const Color(0xFF39FF14),
+    background: const Color(0xFFF3F0FF),
+    onPrimary: Colors.white,
+  ),
+
+  appBarTheme: const AppBarTheme(
+    backgroundColor: Color(0xFFD0A2F7),
+    foregroundColor: Colors.black,
+    elevation: 0,
+  ),
+
+  floatingActionButtonTheme: const FloatingActionButtonThemeData(
+    backgroundColor: Color(0xFF3C096C),
+    foregroundColor: Colors.white,
+  ),
+
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: const Color(0xFF3C096C),
+      foregroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(30),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    ),
+  ),
+
+  inputDecorationTheme: InputDecorationTheme(
+    filled: true,
+    fillColor: const Color(0xFFEDE7F6),
+    labelStyle: const TextStyle(color: Color(0xFF3C096C)),
+    focusedBorder: OutlineInputBorder(
+      borderSide: const BorderSide(color: Color(0xFF39FF14), width: 2),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderSide: const BorderSide(color: Color(0xFFB39DDB)),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    prefixIconColor: const Color(0xFF39FF14),
+  ),
+
+  textTheme: const TextTheme(
+    headlineSmall: TextStyle(
+      fontSize: 22,
+      fontWeight: FontWeight.bold,
+      color: Color(0xFF1C1B2A),
+    ),
+    bodyMedium: TextStyle(
+      fontSize: 16,
+      color: Color(0xFF3C096C),
+    ),
+    labelLarge: TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+      color: Color(0xFF1C1B2A),
+    ),
+  ),
+
+  cardTheme: CardTheme(
+    color: const Color(0xFFEDE7F6),
+    shadowColor: Colors.black.withOpacity(0.15),
+    elevation: 4,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    ),
+  ),
+);
