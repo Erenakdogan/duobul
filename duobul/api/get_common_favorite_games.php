@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // Veritabanı bağlantısı
 try {
-    $pdo = new PDO("mysql:host=localhost;port=3307;dbname=usersinfo", "root", "");
+    $pdo = new PDO("mysql:host=192.168.51.187;port=3307;dbname=usersinfo", "root", "");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch(PDOException $e) {
     echo json_encode([

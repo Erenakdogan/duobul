@@ -7,7 +7,7 @@ header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type, Accept');
 
 // MySQL bağlantı bilgileri
-$host = 'localhost';
+$host = '192.168.51.187';
 $dbname = 'usersinfo';
 $username = 'root';
 $password = '';

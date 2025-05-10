@@ -1,0 +1,2 @@
+C:/Users/aydne/OneDrive/Belgeler/GitHub/duobul/duobul/android/app/.cxx/RelWithDebInfo/401u2n3k/x86/CMakeFiles/edit_cache.dir
+C:/Users/aydne/OneDrive/Belgeler/GitHub/duobul/duobul/android/app/.cxx/RelWithDebInfo/401u2n3k/x86/CMakeFiles/rebuild_cache.dir

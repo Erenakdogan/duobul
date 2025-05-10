@@ -6,7 +6,7 @@ header('Access-Control-Allow-Headers: Content-Type');
 
 try {
     // Veritabanı bağlantısı
-    $pdo = new PDO("mysql:host=localhost;port=3307;dbname=usersinfo", "root", "");
+    $pdo = new PDO("mysql:host=192.168.51.187;port=3307;dbname=usersinfo", "root", "");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // POST verilerini al

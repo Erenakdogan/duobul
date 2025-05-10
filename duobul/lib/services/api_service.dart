@@ -5,10 +5,68 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.0.7/api';
+  static const String baseUrl = 'http://192.168.51.187/api';
   final Duration timeout = const Duration(seconds: 10);
 
   ApiService();
+  // ApiService sınıfına bu metodu ekleyin
+Future<Map<String, dynamic>> savePlayerRank({
+  required String email,
+  required int rank,
+  required String gameType,
+}) async {
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/save_player_rank.php'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: json.encode({
+        'email': email,
+        'rank': rank,
+        'game_type': gameType
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Rank kaydedilemedi');
+    }
+  } catch (e) {
+    print('❌ HATA: $e');
+    throw Exception('Bağlantı hatası: $e');
+  }
+}
+
+// Rank bilgisini çekmek için
+Future<Map<String, dynamic>> getPlayerRank({
+  required String email,
+  required String gameType,
+}) async {
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/get_player_rank.php'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: json.encode({
+        'email': email,
+        'game_type': gameType,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Rank bilgisi alınamadı');
+    }
+  } catch (e) {
+    throw Exception('Rank sorgulama hatası: $e');
+  }
+}
 
   // Bağlantı kontrolü
   Future<bool> checkConnection() async {
@@ -85,6 +143,7 @@ class ApiService {
       throw Exception('Bir hata oluştu: $e');
     }
   }
+  
 
   // Kullanıcı kaydı (güncellenmiş debug'lu)
   Future<Map<String, dynamic>> register(
@@ -352,5 +411,23 @@ class ApiService {
     } catch (e) {
       throw Exception('Bağlantı hatası: $e');
     }
+  }
+
+  Future<Map<String, dynamic>> findClosestRank(String email, int rank) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/find_closest_rank.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'email': email, 'rank': rank}),
+    );
+    return json.decode(response.body);
+  }
+
+  Future<Map<String, dynamic>> findUsersInRankRange(String email, int minRank, int maxRank) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/find_users_in_rank_range.php'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'email': email, 'min_rank': minRank, 'max_rank': maxRank}),
+    );
+    return json.decode(response.body);
   }
 }

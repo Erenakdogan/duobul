@@ -3,7 +3,7 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
 // MySQL bağlantı bilgileri
-$host = 'localhost';
+$host = '192.168.51.187';
 $dbname = 'duobul_db';
 $username = 'root';
 $password = '';

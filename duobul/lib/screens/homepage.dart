@@ -5,6 +5,10 @@ import 'package:duobul/utility/chat_box.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../widgets/game_dialog.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
+import 'rank_search_page.dart';
+
 
 class HomeScreen extends StatefulWidget {
   final String email;
@@ -25,6 +29,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late List<String> _favoriteGamesList;
   final ApiService _apiService = ApiService();
+   int? _currentCSGORank;
+  bool _isLoadingRank = false;
+  final TextEditingController _ratingController = TextEditingController();
+  int? _currentCSGORating;
 
   @override
   void initState() {
@@ -34,7 +42,87 @@ class _HomeScreenState extends State<HomeScreen> {
         .where((game) => game.isNotEmpty)
         .toList();
     _loadProfile();
+    _loadCSGORating(); // CS:GO rating yükle
   }
+  Future<void> _loadCSGORating() async {
+  try {
+    final response = await _apiService.getPlayerRank(
+      email: widget.email,
+      gameType: 'csgo',
+    );
+    
+    if (response['success'] == true && response['rank'] != null) {
+      setState(() => _currentCSGORating = response['rank']);
+    }
+  } catch (e) {
+    print('Rating yüklenirken hata: $e');
+  }
+}
+
+Future<void> _saveCSGORating(int rating) async {
+  try {
+    final response = await _apiService.savePlayerRank(
+      email: widget.email,
+      gameType: 'csgo',
+      rank: rating,
+    );
+
+    if (response['success'] == true) {
+      setState(() => _currentCSGORating = rating);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Rating kaydedildi: $rating')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Hata: ${response['message'] ?? 'Bilinmeyen bir hata oluştu'}')),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Hata: ${e.toString()}')),
+    );
+  }
+}
+
+void _showCSGORankDialog(BuildContext context) {
+  _ratingController.text = _currentCSGORating?.toString() ?? '';
+
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text("CS:GO Ratinginiz"),
+      content: TextField(
+        controller: _ratingController,
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        decoration: InputDecoration(
+          hintText: "Örn: 25640",
+          labelText: "Puanınızı girin",
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: Text("İptal"),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final rating = int.tryParse(_ratingController.text) ?? 0;
+            if (rating <= 0) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Lütfen geçerli bir rank girin!')),
+              );
+              return;
+            }
+            _saveCSGORating(rating);
+            Navigator.pop(ctx);
+          },
+          child: Text("Kaydet"),
+        ),
+      ],
+    ),
+  );
+}
 
   Future<void> _loadProfile() async {
     try {
@@ -75,6 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      
       backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
         title: const Text('DuoBul'),
@@ -104,6 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: Stack(
+        
         fit: StackFit.expand,
         children: [
           // Arka plan ikonları
@@ -222,54 +312,72 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 10),
                         Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: _favoriteGamesList
-                              .map(
-                                (game) => GestureDetector(
-                                  onTap: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) =>
-                                          GameDialog(gameName: game),
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 15, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .tertiary,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.games,
-                                          size: 20,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onPrimary,
-                                        ),
-                                        const SizedBox(width: 5),
-                                        Text(
-                                          game,
-                                          style: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onPrimary,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
+  spacing: 10,
+  runSpacing: 10,
+  children: _favoriteGamesList
+      .map((game) => GestureDetector(
+  onTap: () {
+    if (game == 'CS:GO') {
+      _showCSGORankDialog(context);
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => GameDialog(gameName: game),
+      );
+    }
+  },
+  child: Container(
+    padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.tertiary,
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.games,
+          size: 20,
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
+        const SizedBox(width: 5),
+        Text(
+          game,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onPrimary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        if (game == 'CS:GO' && _currentCSGORating != null) ...[
+          const SizedBox(width: 5),
+          Text(
+            '(${NumberFormat.decimalPattern().format(_currentCSGORating)} Puan)',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.8),
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+        if (game == 'CS:GO' && _isLoadingRank) ...[
+          const SizedBox(width: 5),
+          SizedBox(
+            width: 12,
+            height: 12,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Theme.of(context).colorScheme.onPrimary,
+            ),
+          ),
+        ],
+      ],
+    ),
+  ),
+),
+       
+      )
+      .toList(),
+),
                       ],
                     ),
                   ),
@@ -286,6 +394,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 10),
                 _buildActivityList(),
+                const SizedBox(height: 20), // Buton ile üst içerik arasında boşluk
+      Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RankSearchPage(
+                  email: widget.email,
+                  rank: _currentCSGORating ?? 0,
+                ),
+              ),
+            );
+          },
+          child: const Text('Rank Arama'),
+        ),
+      ),
               ],
             ),
           ),
@@ -306,6 +431,7 @@ class _HomeScreenState extends State<HomeScreen> {
           color: Theme.of(context).colorScheme.onPrimary,
         ),
       ),
+      
     );
   }
 
@@ -945,6 +1071,7 @@ class SearchResultsScreen extends StatelessWidget {
           ],
         ),
       ),
+      
     );
   }
   
