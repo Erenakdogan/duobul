@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'settings.dart';
+import 'profile_update.dart';
 
 class ProfilePage extends StatefulWidget {
   final String email;
@@ -34,6 +35,13 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() {
       _friendsFuture = _apiService.getFriends(widget.email);
       _friendRequestsFuture = _apiService.getFriendRequests(widget.email);
+    });
+  }
+
+  void _refreshProfile() {
+    setState(() {
+      _profileFuture = _apiService.getProfile(widget.email);
+      _loadFriendsAndRequests();
     });
   }
 
@@ -555,8 +563,21 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: 20),
                     // Profil düzenleme butonu
                     ElevatedButton(
-                      onPressed: () {
-                        // Profil düzenleme sayfasına yönlendirme
+                      onPressed: () async {
+                        print('Profil sayfasındaki email: ${widget.email}');
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProfileUpdate(
+                              email: widget.email,
+                            ),
+                          ),
+                        );
+
+                        // Eğer profil güncellendiyse sayfayı yenile
+                        if (result == true) {
+                          _refreshProfile();
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 50),
