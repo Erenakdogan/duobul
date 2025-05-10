@@ -97,7 +97,6 @@ class _ProfileUpdateState extends State<ProfileUpdate> {
     print('_updateProfile fonksiyonu başladı');
     print('Email: ${widget.email}');
 
-    // Loading ekranını göster
     if (!mounted) return;
 
     showDialog(
@@ -139,20 +138,23 @@ class _ProfileUpdateState extends State<ProfileUpdate> {
 
       final jsonResponse = json.decode(responseData);
 
+      if (!mounted) return;
+
       // Loading ekranını kapat
       Navigator.pop(context);
 
       if (response.statusCode == 200 && jsonResponse['success'] == true) {
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profil başarıyla güncellendi')),
         );
 
         // Profil sayfasına dön ve yenileme yap
-        if (mounted) {
-          Navigator.pop(context,
-              true); // true değeri ile dön, bu sayede profil sayfası yenilenecek
-        }
+        Navigator.pop(context, true);
       } else {
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(jsonResponse['error'] ??
@@ -160,6 +162,8 @@ class _ProfileUpdateState extends State<ProfileUpdate> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
+
       // Loading ekranını kapat
       Navigator.pop(context);
 
