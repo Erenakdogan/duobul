@@ -440,4 +440,90 @@ class ApiService {
       throw Exception('Bağlantı hatası: $e');
     }
   }
+
+  // Rank kaydetme
+  Future<Map<String, dynamic>> savePlayerRank({
+    required String email,
+    required int rank,
+    required String gameType,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/save_player_rank.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body:
+            json.encode({'email': email, 'rank': rank, 'game_type': gameType}),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Rank kaydedilemedi');
+      }
+    } catch (e) {
+      print('❌ HATA: $e');
+      throw Exception('Bağlantı hatası: $e');
+    }
+  }
+
+  // Rank bilgisini çekmek için
+  Future<Map<String, dynamic>> getPlayerRank({
+    required String email,
+    required String gameType,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/get_player_rank.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'email': email,
+          'game_type': gameType,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Rank bilgisi alınamadı');
+      }
+    } catch (e) {
+      throw Exception('Rank sorgulama hatası: $e');
+    }
+  }
+
+  // En yakın rankı bulma
+  Future<Map<String, dynamic>> findClosestRank(String email, int rank) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/find_closest_rank.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': email, 'rank': rank}),
+      );
+      return json.decode(response.body);
+    } catch (e) {
+      throw Exception('En yakın rank bulunamadı: $e');
+    }
+  }
+
+  // Rank aralığında kullanıcıları bulma
+  Future<Map<String, dynamic>> findUsersInRankRange(
+      String email, int minRank, int maxRank) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/find_users_in_rank_range.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: json
+            .encode({'email': email, 'min_rank': minRank, 'max_rank': maxRank}),
+      );
+      return json.decode(response.body);
+    } catch (e) {
+      throw Exception('Rank aralığında kullanıcı bulunamadı: $e');
+    }
+  }
 }

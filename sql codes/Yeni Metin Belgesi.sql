@@ -44,3 +44,10 @@ CREATE TABLE messages (
     FOREIGN KEY (sender_email) REFERENCES users(email),
     FOREIGN KEY (receiver_email) REFERENCES users(email)
 );
+
+CREATE TABLE user_ranks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    rank INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

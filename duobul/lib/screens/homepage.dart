@@ -5,6 +5,9 @@ import 'package:duobul/utility/chat_box.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../widgets/game_dialog.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
+import 'rank_search_page.dart';
 
 class HomeScreen extends StatefulWidget {
   final String email;
@@ -25,6 +28,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late List<String> _favoriteGamesList;
   final ApiService _apiService = ApiService();
+  int? _currentCSGORating;
+  bool _isLoadingRank = false;
+  final TextEditingController _ratingController = TextEditingController();
 
   @override
   void initState() {
@@ -34,6 +40,127 @@ class _HomeScreenState extends State<HomeScreen> {
         .where((game) => game.isNotEmpty)
         .toList();
     _loadProfile();
+    _loadCSGORating();
+  }
+
+  Future<void> _loadCSGORating() async {
+    if (!mounted) return;
+
+    setState(() => _isLoadingRank = true);
+    try {
+      final response = await _apiService.getPlayerRank(
+        email: widget.email,
+        gameType: 'csgo',
+      );
+
+      if (mounted && response['success'] == true && response['rank'] != null) {
+        setState(() {
+          _currentCSGORating = response['rank'];
+          _isLoadingRank = false;
+        });
+      }
+    } catch (e) {
+      print('Rating yüklenirken hata: $e');
+      if (mounted) {
+        setState(() => _isLoadingRank = false);
+      }
+    }
+  }
+
+  Future<void> _saveCSGORating(int rating) async {
+    if (!mounted) return;
+
+    if (rating <= 0 || rating > 100000) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Lütfen geçerli bir rank puanı girin (1-100000)')),
+      );
+      return;
+    }
+
+    setState(() => _isLoadingRank = true);
+    try {
+      final response = await _apiService.savePlayerRank(
+        email: widget.email,
+        gameType: 'csgo',
+        rank: rating,
+      );
+
+      if (mounted) {
+        setState(() {
+          _currentCSGORating = rating;
+          _isLoadingRank = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Rank kaydedildi: $rating')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingRank = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  void _showCSGORankDialog(BuildContext context) {
+    _ratingController.text = _currentCSGORating?.toString() ?? '';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("CS:GO Rankiniz"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "CS:GO rankinizi girin",
+              style: TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _ratingController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: const InputDecoration(
+                hintText: "Örn: 25640",
+                labelText: "Rank Puanınız",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              "Not: Rank puanınızı Steam profilinizden öğrenebilirsiniz.",
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("İptal"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final rating = int.tryParse(_ratingController.text) ?? 0;
+              if (rating <= 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('Lütfen geçerli bir rank puanı girin!')),
+                );
+                return;
+              }
+              _saveCSGORating(rating);
+              Navigator.pop(ctx);
+            },
+            child: const Text("Kaydet"),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _loadProfile() async {
@@ -45,6 +172,11 @@ class _HomeScreenState extends State<HomeScreen> {
               .toString()
               .split(',')
               .where((game) => game.isNotEmpty)
+              .map((game) => game
+                  .replaceAll('"', '')
+                  .replaceAll('[', '')
+                  .replaceAll(']', '')
+                  .trim())
               .toList();
         });
       }
@@ -224,49 +356,80 @@ class _HomeScreenState extends State<HomeScreen> {
                           spacing: 10,
                           runSpacing: 10,
                           children: _favoriteGamesList
-                              .map(
-                                (game) => GestureDetector(
-                                  onTap: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) =>
-                                          GameDialog(gameName: game),
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 15, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .tertiary,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.games,
-                                          size: 20,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onPrimary,
-                                        ),
-                                        const SizedBox(width: 5),
-                                        Text(
-                                          game,
-                                          style: TextStyle(
+                              .map((game) => GestureDetector(
+                                    onTap: () {
+                                      if (game == 'CS:GO') {
+                                        _showCSGORankDialog(context);
+                                      } else {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) =>
+                                              GameDialog(gameName: game),
+                                        );
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 15, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .tertiary,
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.games,
+                                            size: 20,
                                             color: Theme.of(context)
                                                 .colorScheme
                                                 .onPrimary,
-                                            fontWeight: FontWeight.w500,
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(width: 5),
+                                          Text(
+                                            game,
+                                            style: TextStyle(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onPrimary,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          if (game == 'CS:GO' &&
+                                              _currentCSGORating != null) ...[
+                                            const SizedBox(width: 5),
+                                            Text(
+                                              '(${_currentCSGORating})',
+                                              style: TextStyle(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimary
+                                                    .withOpacity(0.8),
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                          if (game == 'CS:GO' &&
+                                              _isLoadingRank) ...[
+                                            const SizedBox(width: 5),
+                                            SizedBox(
+                                              width: 12,
+                                              height: 12,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimary,
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              )
+                                  ))
                               .toList(),
                         ),
                       ],
@@ -285,6 +448,32 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 10),
                 _buildActivityList(),
+                const SizedBox(
+                    height: 20), // Buton ile üst içerik arasında boşluk
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_currentCSGORating == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content:
+                                  Text('Lütfen önce CS:GO ratinginizi girin')),
+                        );
+                        return;
+                      }
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RankSearchPage(
+                            email: widget.email,
+                            rank: _currentCSGORating!,
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text('Rank Arama'),
+                  ),
+                ),
               ],
             ),
           ),
