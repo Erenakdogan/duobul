@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.0.6/api';
+  static const String baseUrl = 'http://192.168.249.187/api';
   final Duration timeout = const Duration(seconds: 10);
 
   ApiService();

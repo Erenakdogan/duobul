@@ -1,0 +1,2 @@
+C:/Users/aydne/CursorProject/duobul/duobul/android/app/.cxx/RelWithDebInfo/1h345sk1/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/aydne/CursorProject/duobul/duobul/android/app/.cxx/RelWithDebInfo/1h345sk1/x86_64/CMakeFiles/rebuild_cache.dir

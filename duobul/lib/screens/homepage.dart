@@ -8,6 +8,8 @@ import '../widgets/game_dialog.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'rank_search_page.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class HomeScreen extends StatefulWidget {
   final String email;
@@ -31,6 +33,8 @@ class _HomeScreenState extends State<HomeScreen> {
   int? _currentCSGORating;
   bool _isLoadingRank = false;
   final TextEditingController _ratingController = TextEditingController();
+  List<Map<String, dynamic>> _friendsWithLastGame = [];
+  bool _isLoadingActivities = true;
 
   @override
   void initState() {
@@ -41,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
         .toList();
     _loadProfile();
     _loadCSGORating();
+    _loadFriendsWithLastGame();
   }
 
   Future<void> _loadCSGORating() async {
@@ -204,6 +209,63 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       print('Profil yüklenirken hata: $e');
     }
+  }
+
+  Future<void> _loadFriendsWithLastGame() async {
+    setState(() => _isLoadingActivities = true);
+    try {
+      final friends = await _apiService.getFriends(widget.email);
+      List<Map<String, dynamic>> result = [];
+      for (var friend in friends) {
+        String? lastGame;
+        if (friend['steam_url'] != null && friend['steam_url'].toString().isNotEmpty) {
+          final steamId = await _extractSteamId(friend['steam_url']);
+          if (steamId.isNotEmpty) {
+            lastGame = await _getLastPlayedGame(steamId);
+          }
+        }
+        result.add({
+          'username': friend['username'],
+          'lastGame': lastGame,
+        });
+      }
+      setState(() {
+        _friendsWithLastGame = result;
+        _isLoadingActivities = false;
+      });
+    } catch (e) {
+      setState(() => _isLoadingActivities = false);
+    }
+  }
+
+  Future<String> _extractSteamId(String url) async {
+    if (url.contains('/profiles/')) {
+      return url.split('/profiles/')[1].split('/')[0];
+    } else if (url.contains('/id/')) {
+      final customId = url.split('/id/')[1].split('/')[0];
+      final apiKey = '9F5BFDF324E3A7ECF9AA01B77FB511B2';
+      final response = await http.get(Uri.parse(
+        'https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key=$apiKey&vanityurl=$customId'));
+      final data = json.decode(response.body);
+      if (data['response']['success'] == 1) {
+        return data['response']['steamid'];
+      }
+    }
+    return '';
+  }
+
+  Future<String?> _getLastPlayedGame(String steamId) async {
+    final apiKey = '9F5BFDF324E3A7ECF9AA01B77FB511B2';
+    final url = 'https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v1/?key=$apiKey&steamid=$steamId';
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final games = data['response']['games'];
+      if (games != null && games.isNotEmpty) {
+        return games[0]['name'];
+      }
+    }
+    return null;
   }
 
   final List<String> _popularGames = [
@@ -519,11 +581,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildActivityList() {
+    if (_isLoadingActivities) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: 3,
+      itemCount: _friendsWithLastGame.length,
       itemBuilder: (context, index) {
+        final friend = _friendsWithLastGame[index];
         return Container(
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.all(15),
@@ -542,8 +608,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               CircleAvatar(
                 backgroundColor: Theme.of(context).colorScheme.primary,
-                child: Icon(Icons.person,
-                    color: Theme.of(context).colorScheme.tertiary),
+                child: Icon(Icons.person, color: Theme.of(context).colorScheme.tertiary),
               ),
               const SizedBox(width: 15),
               Expanded(
@@ -551,14 +616,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Kullanıcı Adı',
+                      friend['username'],
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.onPrimary,
                       ),
                     ),
                     Text(
-                      'League of Legends oyunu için eşleşme arıyor',
+                      friend['lastGame'] != null
+                          ? 'Son oynadığı oyun: ${friend['lastGame']}'
+                          : 'Steam bağlı değil veya oyun bulunamadı',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onPrimary,
                         fontSize: 12,
@@ -566,13 +633,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                 ),
-              ),
-              IconButton(
-                icon: Icon(Icons.message,
-                    color: Theme.of(context).colorScheme.tertiary),
-                onPressed: () {
-                  // Mesaj gönderme işlemi
-                },
               ),
             ],
           ),
@@ -613,31 +673,54 @@ class GameSearchDelegate extends SearchDelegate<String> {
   }
 
   void _searchWithSteamID(BuildContext context) {
+    final TextEditingController controller = TextEditingController();
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Search with Steam ID'),
-        content: TextField(
-          decoration: const InputDecoration(
-            hintText: 'Enter Steam ID',
-          ),
-          onSubmitted: (steamID) {
-            Navigator.pop(context); // Dialog'u kapat
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SteamPageWithID(
-                    steamId: steamID), // SteamPageWithID'ye yönlendir
+        title: const Text('Steam Profili Ara'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: 'Steam profil URL\'si girin',
+                helperText: 'Örnek: https://steamcommunity.com/id/username veya https://steamcommunity.com/profiles/76561198xxxxxxxxx',
               ),
-            );
-          },
+              onSubmitted: (steamUrl) {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SteamPageWithID(steamUrl: steamUrl),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // Dialog'u kapat
+              Navigator.pop(context);
             },
-            child: const Text('Cancel'),
+            child: const Text('İptal'),
+          ),
+          TextButton(
+            onPressed: () {
+              final steamUrl = controller.text;
+              if (steamUrl.isNotEmpty) {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SteamPageWithID(steamUrl: steamUrl),
+                  ),
+                );
+              }
+            },
+            child: const Text('Ara'),
           ),
         ],
       ),

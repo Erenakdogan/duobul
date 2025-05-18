@@ -25,7 +25,7 @@ try {
     error_log("Gelen e-posta: " . $email);
 
     // Kullanıcı bilgilerini getir
-    $stmt = $pdo->prepare("SELECT username, favorite_games, profile_photo FROM users WHERE email = :email");
+    $stmt = $pdo->prepare("SELECT username, favorite_games, profile_photo, steam_url FROM users WHERE email = :email");
     $stmt->execute([':email' => $email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -37,7 +37,8 @@ try {
             'success' => true,
             'username' => $user['username'],
             'favorite_games' => $user['favorite_games'] ?? '',
-            'profile_photo' => $user['profile_photo'] ? base64_encode($user['profile_photo']) : null
+            'profile_photo' => $user['profile_photo'] ? base64_encode($user['profile_photo']) : null,
+            'steam_url' => $user['steam_url'] ?? ''
         ];
         
         // Debug için yanıtı logla

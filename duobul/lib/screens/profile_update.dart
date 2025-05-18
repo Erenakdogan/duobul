@@ -33,6 +33,7 @@ class _ProfileUpdateState extends State<ProfileUpdate> {
     'Dota 2',
     'GTA V'
   ];
+  final TextEditingController _steamUrlController = TextEditingController();
 
   @override
   void initState() {
@@ -65,11 +66,17 @@ class _ProfileUpdateState extends State<ProfileUpdate> {
             if (data['favorite_games'] != null) {
               favoriteGames = List<String>.from(data['favorite_games']);
             }
+            if (data['steam_url'] != null) {
+              _steamUrlController.text = data['steam_url'];
+            }
           });
         } else {
           setState(() {
             if (data['favorite_games'] != null) {
               favoriteGames = List<String>.from(data['favorite_games']);
+            }
+            if (data['steam_url'] != null) {
+              _steamUrlController.text = data['steam_url'];
             }
           });
         }
@@ -116,10 +123,12 @@ class _ProfileUpdateState extends State<ProfileUpdate> {
 
     request.fields['email'] = widget.email;
     request.fields['favorite_games'] = json.encode(favoriteGames);
+    request.fields['steam_url'] = _steamUrlController.text.trim();
 
     print('Gönderilen veriler:');
     print('Email: ${widget.email}');
     print('Favori Oyunlar: ${json.encode(favoriteGames)}');
+    print('Steam Profil URL: ${_steamUrlController.text.trim()}');
 
     if (_image != null) {
       request.files.add(
@@ -226,6 +235,16 @@ class _ProfileUpdateState extends State<ProfileUpdate> {
                       },
                     );
                   }).toList(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Steam Profil URL'si alanı
+              TextField(
+                controller: _steamUrlController,
+                decoration: InputDecoration(
+                  labelText: 'Steam Profil URL\'si',
+                  hintText: 'https://steamcommunity.com/id/kullaniciadi',
+                  prefixIcon: Icon(Icons.link),
                 ),
               ),
               const SizedBox(height: 30),

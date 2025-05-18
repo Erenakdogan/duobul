@@ -10,6 +10,7 @@ try {
 
     $email = $_POST['email'] ?? '';
     $favorite_games = $_POST['favorite_games'] ?? '[]';
+    $steam_url = $_POST['steam_url'] ?? '';
 
     if (empty($email)) {
         echo json_encode(['success' => false, 'error' => 'Email parametresi gerekli']);
@@ -29,6 +30,10 @@ try {
     if ($profile_photo !== null) {
         $sql .= ", profile_photo = ?";
         $params[] = $profile_photo;
+    }
+    if (!empty($steam_url)) {
+        $sql .= ", steam_url = ?";
+        $params[] = $steam_url;
     }
 
     $sql .= " WHERE email = ?";

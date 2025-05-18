@@ -13,7 +13,7 @@ class SteamPage extends StatefulWidget {
 }
 
 class _SteamPageState extends State<SteamPage> {
-  final String _steamApiKey = '72C9ABCBC62AE377956BCE7213F08D35'; // Steam API anahtarı
+  final String _steamApiKey = '9F5BFDF324E3A7ECF9AA01B77FB511B2'; // Steam API anahtarı
   Map<String, dynamic>? _playerData;
   List<Map<String, dynamic>>? _friendsList;
   List<dynamic>? _ownedGames;
@@ -27,39 +27,107 @@ class _SteamPageState extends State<SteamPage> {
 
   Future<void> _fetchSteamData() async {
     try {
-      final steamId = widget.steamId; // Kullanıcıdan alınan Steam ID
+      String steamId = widget.steamId;
+      print('Başlangıç Steam ID: $steamId'); // Debug için
+      
+      // Eğer gelen değer bir URL ise ve custom ID içeriyorsa
+      if (steamId.contains('steamcommunity.com/id/')) {
+        final customId = steamId.split('/id/')[1].split('/')[0];
+        print('Custom ID: $customId'); // Debug için
+        
+        // Steam API'den custom ID'yi Steam ID'ye çevir
+        final resolveUrl = 'https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key=$_steamApiKey&vanityurl=$customId';
+        print('Resolve URL: $resolveUrl'); // Debug için
+        
+        final resolveVanityUrlResponse = await http.get(Uri.parse(resolveUrl));
+        print('Resolve Response Status: ${resolveVanityUrlResponse.statusCode}'); // Debug için
+        print('Resolve Response Body: ${resolveVanityUrlResponse.body}'); // Debug için
+
+        final resolveData = json.decode(resolveVanityUrlResponse.body);
+        if (resolveData['response']['success'] == 1) {
+          steamId = resolveData['response']['steamid'];
+          print('Resolved Steam ID: $steamId'); // Debug için
+        } else {
+          throw Exception('Steam profil bulunamadı: ${resolveData['response']['message'] ?? 'Bilinmeyen hata'}');
+        }
+      }
+
       // Kullanıcı bilgilerini çek
-      final playerResponse = await http.get(Uri.parse(
-          'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=$_steamApiKey&steamids=$steamId'));
-      final playerData = json.decode(playerResponse.body)['response']['players'][0];
+      final playerUrl = 'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=$_steamApiKey&steamids=$steamId';
+      print('Player URL: $playerUrl'); // Debug için
+      
+      final playerResponse = await http.get(Uri.parse(playerUrl));
+      print('Player Response Status: ${playerResponse.statusCode}'); // Debug için
+      print('Player Response Body: ${playerResponse.body}'); // Debug için
+
+      final playerData = json.decode(playerResponse.body);
+      if (playerData['response']['players'] == null || playerData['response']['players'].isEmpty) {
+        throw Exception('Steam profili bulunamadı');
+      }
+      final player = playerData['response']['players'][0];
 
       // Arkadaş listesini çek
-      final friendsResponse = await http.get(Uri.parse(
-          'https://api.steampowered.com/ISteamUser/GetFriendList/v1/?key=$_steamApiKey&steamid=$steamId'));
-      final friendsData = json.decode(friendsResponse.body)['friendslist']['friends'];
+      final friendsUrl = 'https://api.steampowered.com/ISteamUser/GetFriendList/v1/?key=$_steamApiKey&steamid=$steamId';
+      print('Friends URL: $friendsUrl'); // Debug için
+      
+      final friendsResponse = await http.get(Uri.parse(friendsUrl));
+      print('Friends Response Status: ${friendsResponse.statusCode}'); // Debug için
+      print('Friends Response Body: ${friendsResponse.body}'); // Debug için
+
+      final friendsData = json.decode(friendsResponse.body);
+      if (friendsData['friendslist'] == null || friendsData['friendslist']['friends'] == null) {
+        throw Exception('Arkadaş listesi alınamadı');
+      }
+      final friends = friendsData['friendslist']['friends'];
 
       // Arkadaşların detaylarını çek
-      final friendIds = friendsData.map((friend) => friend['steamid']).join(',');
-      final friendsDetailsResponse = await http.get(Uri.parse(
-          'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=$_steamApiKey&steamids=$friendIds'));
-      final friendsDetails = json.decode(friendsDetailsResponse.body)['response']['players'];
+      final friendIds = friends.map((friend) => friend['steamid']).join(',');
+      final friendsDetailsUrl = 'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=$_steamApiKey&steamids=$friendIds';
+      print('Friends Details URL: $friendsDetailsUrl'); // Debug için
+      
+      final friendsDetailsResponse = await http.get(Uri.parse(friendsDetailsUrl));
+      print('Friends Details Response Status: ${friendsDetailsResponse.statusCode}'); // Debug için
+      print('Friends Details Response Body: ${friendsDetailsResponse.body}'); // Debug için
+
+      final friendsDetails = json.decode(friendsDetailsResponse.body);
+      if (friendsDetails['response']['players'] == null) {
+        throw Exception('Arkadaş detayları alınamadı');
+      }
 
       // Sahip olunan oyunları çek
-      final gamesResponse = await http.get(Uri.parse(
-          'https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=$_steamApiKey&steamid=$steamId&include_appinfo=true'));
-      final gamesData = json.decode(gamesResponse.body)['response']['games'];
+      final gamesUrl = 'https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=$_steamApiKey&steamid=$steamId&include_appinfo=true';
+      print('Games URL: $gamesUrl'); // Debug için
+      
+      final gamesResponse = await http.get(Uri.parse(gamesUrl));
+      print('Games Response Status: ${gamesResponse.statusCode}'); // Debug için
+      print('Games Response Body: ${gamesResponse.body}'); // Debug için
+
+      final gamesData = json.decode(gamesResponse.body);
+      if (gamesData['response'] == null || gamesData['response']['games'] == null) {
+        throw Exception('Oyun listesi alınamadı');
+      }
 
       setState(() {
-        _playerData = playerData; // Kullanıcı bilgilerini güncelle
-        _friendsList = List<Map<String, dynamic>>.from(friendsDetails);
-        _ownedGames = gamesData;
+        _playerData = player;
+        _friendsList = List<Map<String, dynamic>>.from(friendsDetails['response']['players']);
+        _ownedGames = gamesData['response']['games'];
         _isLoading = false;
       });
     } catch (e) {
-      print('Hata: $e');
+      print('Steam API Hatası: $e');
       setState(() {
         _isLoading = false;
       });
+      // Hata mesajını kullanıcıya göster
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Steam profili yüklenirken hata oluştu: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
     }
   }
 

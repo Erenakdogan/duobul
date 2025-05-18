@@ -23,7 +23,7 @@ try {
 
     // Arkadaş listesini getir
     $stmt = $pdo->prepare("
-        SELECT u.username, u.email
+        SELECT u.username, u.email, u.steam_url
         FROM friendships f
         JOIN users u ON (
             CASE 
