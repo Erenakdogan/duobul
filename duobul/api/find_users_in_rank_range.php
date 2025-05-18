@@ -4,7 +4,17 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
-require_once 'db_connect.php';
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "usersinfo";
+$port = 3307;
+
+$conn = new mysqli($servername, $username, $password, $dbname, $port);
+
+if ($conn->connect_error) {
+    die(json_encode(['success' => false, 'message' => 'Veritabanı bağlantı hatası: ' . $conn->connect_error]));
+}
 
 $data = json_decode(file_get_contents('php://input'), true);
 
@@ -14,12 +24,12 @@ if (!isset($data['email']) || !isset($data['min_rank']) || !isset($data['max_ran
 }
 
 $email = $data['email'];
-$minRank = $data['min_rank'];
-$maxRank = $data['max_rank'];
+$minRank = intval($data['min_rank']);
+$maxRank = intval($data['max_rank']);
 
 try {
     // Kullanıcının oyun tipini al
-    $stmt = $conn->prepare("SELECT game_type FROM player_ranks WHERE email = ?");
+    $stmt = $conn->prepare("SELECT game_type FROM user_ranks WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -34,13 +44,13 @@ try {
     
     // Rank aralığındaki kullanıcıları bul
     $stmt = $conn->prepare("
-        SELECT pr.email, pr.rank, u.username
-        FROM player_ranks pr
-        JOIN users u ON pr.email = u.email
-        WHERE pr.game_type = ? 
-        AND pr.email != ?
-        AND pr.rank BETWEEN ? AND ?
-        ORDER BY pr.rank ASC
+        SELECT ur.email, ur.rank, u.username
+        FROM user_ranks ur
+        JOIN users u ON ur.email = u.email
+        WHERE ur.game_type = ? 
+        AND ur.email != ?
+        AND ur.rank BETWEEN ? AND ?
+        ORDER BY ur.rank ASC
     ");
     $stmt->bind_param("ssii", $gameType, $email, $minRank, $maxRank);
     $stmt->execute();

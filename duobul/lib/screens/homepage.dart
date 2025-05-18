@@ -87,14 +87,23 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (mounted) {
-        setState(() {
-          _currentCSGORating = rating;
-          _isLoadingRank = false;
-        });
+        if (response['success'] == true) {
+          setState(() {
+            _currentCSGORating = rating;
+            _isLoadingRank = false;
+          });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Rank kaydedildi: $rating')),
-        );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Rank kaydedildi: $rating')),
+          );
+        } else {
+          setState(() => _isLoadingRank = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content:
+                    Text('Hata: ${response['message'] ?? 'Bilinmeyen hata'}')),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -124,7 +133,10 @@ class _HomeScreenState extends State<HomeScreen> {
             TextField(
               controller: _ratingController,
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(6),
+              ],
               decoration: const InputDecoration(
                 hintText: "Örn: 25640",
                 labelText: "Rank Puanınız",
@@ -145,14 +157,23 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              final rating = int.tryParse(_ratingController.text) ?? 0;
-              if (rating <= 0) {
+              final ratingText = _ratingController.text.trim();
+              if (ratingText.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Lütfen bir rank puanı girin!')),
+                );
+                return;
+              }
+
+              final rating = int.tryParse(ratingText);
+              if (rating == null || rating <= 0) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                       content: Text('Lütfen geçerli bir rank puanı girin!')),
                 );
                 return;
               }
+
               _saveCSGORating(rating);
               Navigator.pop(ctx);
             },

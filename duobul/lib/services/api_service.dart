@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.0.7/api';
+  static const String baseUrl = 'http://192.168.0.6/api';
   final Duration timeout = const Duration(seconds: 10);
 
   ApiService();
@@ -500,13 +500,36 @@ class ApiService {
   // En yakın rankı bulma
   Future<Map<String, dynamic>> findClosestRank(String email, int rank) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/find_closest_rank.php'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({'email': email, 'rank': rank}),
-      );
-      return json.decode(response.body);
+      print('🔍 En yakın rank aranıyor:');
+      print('Email: $email');
+      print('Rank: $rank');
+
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/find_closest_rank.php'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: json.encode({'email': email, 'rank': rank}),
+          )
+          .timeout(timeout);
+
+      print('📥 Sunucu yanıtı: ${response.statusCode}');
+      print('📥 Yanıt içeriği: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return data;
+        } else {
+          throw Exception(data['message'] ?? 'En yakın rank bulunamadı');
+        }
+      } else {
+        throw Exception('Sunucu hatası: ${response.statusCode}');
+      }
     } catch (e) {
+      print('❌ HATA: $e');
       throw Exception('En yakın rank bulunamadı: $e');
     }
   }

@@ -4,7 +4,8 @@ import '../services/api_service.dart';
 class RankSearchPage extends StatefulWidget {
   final String email;
   final int rank;
-  const RankSearchPage({Key? key, required this.email, required this.rank}) : super(key: key);
+  const RankSearchPage({Key? key, required this.email, required this.rank})
+      : super(key: key);
 
   @override
   _RankSearchPageState createState() => _RankSearchPageState();
@@ -31,7 +32,8 @@ class _RankSearchPageState extends State<RankSearchPage> {
     });
     if (selectedOption == 'Bana En Yakın Rank') {
       try {
-        final result = await _apiService.findClosestRank(widget.email, widget.rank);
+        final result =
+            await _apiService.findClosestRank(widget.email, widget.rank);
         if (result['success'] == true) {
           final closest = result['closest'];
           if (closest is List) {
@@ -61,9 +63,12 @@ class _RankSearchPageState extends State<RankSearchPage> {
           _isSearching = false;
         });
       }
-    } else if (selectedOption == 'Rank Aralığı' && minRank != null && maxRank != null) {
+    } else if (selectedOption == 'Rank Aralığı' &&
+        minRank != null &&
+        maxRank != null) {
       try {
-        final result = await _apiService.findUsersInRankRange(widget.email, minRank!, maxRank!);
+        final result = await _apiService.findUsersInRankRange(
+            widget.email, minRank!, maxRank!);
         if (result['success'] == true) {
           final users = result['users'];
           if (users is List) {
@@ -176,17 +181,18 @@ class _RankSearchPageState extends State<RankSearchPage> {
               ),
             ),
             const SizedBox(height: 20),
-            if (_isSearching)
-              Center(child: CircularProgressIndicator()),
+            if (_isSearching) Center(child: CircularProgressIndicator()),
             if (_closestUsers != null)
               ..._closestUsers!.map((user) => Card(
-                child: ListTile(
-                  title: Text('Kullanıcı Adı: \\${user['username']}'),
-                  subtitle: Text('Rank: \\${user['rank']}'),
-                ),
-              )),
+                    child: ListTile(
+                      title: Text('Kullanıcı Adı: \\${user['username']}'),
+                      subtitle: Text('Rank: \\${user['rank']}'),
+                    ),
+                  )),
             if (_searchError != null)
-              Center(child: Text('Hata: \\$_searchError', style: TextStyle(color: Colors.red))),
+              Center(
+                  child: Text('Hata: \\$_searchError',
+                      style: TextStyle(color: Colors.red))),
           ],
         ),
       ),
