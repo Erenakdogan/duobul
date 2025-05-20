@@ -62,3 +62,5 @@ ALTER TABLE user_ranks CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_
 
 ALTER TABLE users MODIFY email VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 ALTER TABLE user_ranks MODIFY email VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+ALTER TABLE users ADD COLUMN steam_url VARCHAR(255);

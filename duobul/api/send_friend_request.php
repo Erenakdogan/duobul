@@ -22,6 +22,15 @@ try {
         exit;
     }
 
+    // Kendine istek göndermeyi engelle
+    if ($senderEmail === $receiverEmail) {
+        echo json_encode([
+            'success' => false,
+            'error' => 'Kendinize arkadaşlık isteği gönderemezsiniz'
+        ]);
+        exit;
+    }
+
     // Alıcının var olup olmadığını kontrol et
     $stmt = $pdo->prepare("SELECT email FROM users WHERE email = :email");
     $stmt->execute([':email' => $receiverEmail]);
@@ -33,8 +42,32 @@ try {
         exit;
     }
 
+    // Zaten arkadaş mı kontrol et
+    $stmt = $pdo->prepare("
+        SELECT id FROM friendships 
+        WHERE ((sender_email = :sender_email AND receiver_email = :receiver_email)
+        OR (sender_email = :receiver_email AND receiver_email = :sender_email))
+        AND status = 'accepted'
+    ");
+    $stmt->execute([
+        ':sender_email' => $senderEmail,
+        ':receiver_email' => $receiverEmail
+    ]);
+    if ($stmt->fetch()) {
+        echo json_encode([
+            'success' => false,
+            'error' => 'Bu kullanıcı zaten arkadaşınız'
+        ]);
+        exit;
+    }
+
     // Daha önce istek gönderilmiş mi kontrol et
-    $stmt = $pdo->prepare("SELECT id FROM friendships WHERE sender_email = :sender_email AND receiver_email = :receiver_email");
+    $stmt = $pdo->prepare("
+        SELECT id FROM friendships 
+        WHERE sender_email = :sender_email 
+        AND receiver_email = :receiver_email 
+        AND status = 'pending'
+    ");
     $stmt->execute([
         ':sender_email' => $senderEmail,
         ':receiver_email' => $receiverEmail
@@ -48,7 +81,10 @@ try {
     }
 
     // Arkadaşlık isteği gönder
-    $stmt = $pdo->prepare("INSERT INTO friendships (sender_email, receiver_email) VALUES (:sender_email, :receiver_email)");
+    $stmt = $pdo->prepare("
+        INSERT INTO friendships (sender_email, receiver_email, status, created_at) 
+        VALUES (:sender_email, :receiver_email, 'pending', NOW())
+    ");
     $stmt->execute([
         ':sender_email' => $senderEmail,
         ':receiver_email' => $receiverEmail

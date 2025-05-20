@@ -218,15 +218,25 @@ class _HomeScreenState extends State<HomeScreen> {
       List<Map<String, dynamic>> result = [];
       for (var friend in friends) {
         String? lastGame;
-        if (friend['steam_url'] != null && friend['steam_url'].toString().isNotEmpty) {
+        String? personastate;
+        String? lastlogoff;
+        if (friend['steam_url'] != null &&
+            friend['steam_url'].toString().isNotEmpty) {
           final steamId = await _extractSteamId(friend['steam_url']);
           if (steamId.isNotEmpty) {
             lastGame = await _getLastPlayedGame(steamId);
+            final playerInfo = await _getPlayerInfo(steamId);
+            if (playerInfo != null) {
+              personastate = _getPersonaStateText(playerInfo['personastate']);
+              lastlogoff = _formatLastLogoff(playerInfo['lastlogoff']);
+            }
           }
         }
         result.add({
           'username': friend['username'],
           'lastGame': lastGame,
+          'personastate': personastate,
+          'lastlogoff': lastlogoff,
         });
       }
       setState(() {
@@ -245,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final customId = url.split('/id/')[1].split('/')[0];
       final apiKey = '9F5BFDF324E3A7ECF9AA01B77FB511B2';
       final response = await http.get(Uri.parse(
-        'https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key=$apiKey&vanityurl=$customId'));
+          'https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key=$apiKey&vanityurl=$customId'));
       final data = json.decode(response.body);
       if (data['response']['success'] == 1) {
         return data['response']['steamid'];
@@ -256,7 +266,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<String?> _getLastPlayedGame(String steamId) async {
     final apiKey = '9F5BFDF324E3A7ECF9AA01B77FB511B2';
-    final url = 'https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v1/?key=$apiKey&steamid=$steamId';
+    final url =
+        'https://api.steampowered.com/IPlayerService/GetRecentlyPlayedGames/v1/?key=$apiKey&steamid=$steamId';
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -266,6 +277,63 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
     return null;
+  }
+
+  Future<Map<String, dynamic>?> _getPlayerInfo(String steamId) async {
+    final apiKey = '9F5BFDF324E3A7ECF9AA01B77FB511B2';
+    final url =
+        'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key=$apiKey&steamids=$steamId';
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['response']['players'] != null &&
+            data['response']['players'].isNotEmpty) {
+          return data['response']['players'][0];
+        }
+      }
+    } catch (e) {
+      print('Steam API Hatası: $e');
+    }
+    return null;
+  }
+
+  String _getPersonaStateText(int? state) {
+    switch (state) {
+      case 0:
+        return 'Çevrimdışı';
+      case 1:
+        return 'Çevrimiçi';
+      case 2:
+        return 'Meşgul';
+      case 3:
+        return 'Uzakta';
+      case 4:
+        return 'Uyku Modu';
+      case 5:
+        return 'Ticaret İçin Hazır';
+      case 6:
+        return 'Oyun İçin Hazır';
+      default:
+        return 'Bilinmiyor';
+    }
+  }
+
+  String _formatLastLogoff(int? timestamp) {
+    if (timestamp == null) return 'Bilinmiyor';
+    final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays} gün önce';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} saat önce';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} dakika önce';
+    } else {
+      return 'Az önce';
+    }
   }
 
   final List<String> _popularGames = [
@@ -608,7 +676,8 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               CircleAvatar(
                 backgroundColor: Theme.of(context).colorScheme.primary,
-                child: Icon(Icons.person, color: Theme.of(context).colorScheme.tertiary),
+                child: Icon(Icons.person,
+                    color: Theme.of(context).colorScheme.tertiary),
               ),
               const SizedBox(width: 15),
               Expanded(
@@ -622,15 +691,39 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Theme.of(context).colorScheme.onPrimary,
                       ),
                     ),
-                    Text(
-                      friend['lastGame'] != null
-                          ? 'Son oynadığı oyun: ${friend['lastGame']}'
-                          : 'Steam bağlı değil veya oyun bulunamadı',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        fontSize: 12,
+                    if (friend['personastate'] != null)
+                      Text(
+                        'Durum: ${friend['personastate']}',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          fontSize: 12,
+                        ),
                       ),
-                    ),
+                    if (friend['lastGame'] != null)
+                      Text(
+                        'Son oynadığı oyun: ${friend['lastGame']}',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    if (friend['lastlogoff'] != null)
+                      Text(
+                        'Son görülme: ${friend['lastlogoff']}',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    if (friend['lastGame'] == null &&
+                        friend['personastate'] == null)
+                      Text(
+                        'Steam bağlı değil veya bilgi bulunamadı',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          fontSize: 12,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -674,7 +767,7 @@ class GameSearchDelegate extends SearchDelegate<String> {
 
   void _searchWithSteamID(BuildContext context) {
     final TextEditingController controller = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -686,7 +779,8 @@ class GameSearchDelegate extends SearchDelegate<String> {
               controller: controller,
               decoration: const InputDecoration(
                 hintText: 'Steam profil URL\'si girin',
-                helperText: 'Örnek: https://steamcommunity.com/id/username veya https://steamcommunity.com/profiles/76561198xxxxxxxxx',
+                helperText:
+                    'Örnek: https://steamcommunity.com/id/username veya https://steamcommunity.com/profiles/76561198xxxxxxxxx',
               ),
               onSubmitted: (steamUrl) {
                 Navigator.pop(context);

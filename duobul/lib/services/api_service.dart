@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.249.187/api';
+  static const String baseUrl = 'http://192.168.149.49/api';
   final Duration timeout = const Duration(seconds: 10);
 
   ApiService();
@@ -247,7 +247,10 @@ class ApiService {
 
       return json.decode(response.body);
     } catch (e) {
-      throw Exception('Bağlantı hatası: $e');
+      return {
+        'success': false,
+        'message': 'Bağlantı hatası: $e',
+      };
     }
   }
 
@@ -547,6 +550,30 @@ class ApiService {
       return json.decode(response.body);
     } catch (e) {
       throw Exception('Rank aralığında kullanıcı bulunamadı: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> checkFriendStatus(
+      String userEmail, String targetEmail) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/check_friend_status.php'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'user_email': userEmail,
+          'target_email': targetEmail,
+        }),
+      );
+
+      return json.decode(response.body);
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Bağlantı hatası: $e',
+      };
     }
   }
 }
